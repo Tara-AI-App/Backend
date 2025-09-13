@@ -25,7 +25,10 @@ class Settings(BaseSettings):
     ALLOWED_HOSTS: List[str] = ["*"]
     
     # Database settings - only what's actually used
-    DATABASE_URL: str = Field(default="sqlite:///./test.db", description="Full database URL")
+    DATABASE_URL: str = Field(description="Full database URL")
+    
+    # Security settings
+    SECRET_KEY: str = Field(description="Secret key for JWT token signing")
     
     class Config:
         env_file = ".env"
