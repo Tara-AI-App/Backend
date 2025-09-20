@@ -4,6 +4,7 @@ from sqlalchemy import text
 # from internal.domain.handler.item_handler import router as item_router
 from internal.ai.handler.ai_handler import router as ai_router
 from internal.user.handler.user_handler import router as user_router
+from internal.oauth.handler.oauth_handler import router as oauth_router
 # from internal.domain.handler.lms_handler import (
 #     department_router, position_router, location_router,
 #     user_router, course_router, module_router
@@ -34,6 +35,7 @@ def create_app() -> FastAPI:
     # app.include_router(item_router, prefix=settings.API_V1_STR)
     app.include_router(ai_router, prefix=settings.API_V1_STR)
     app.include_router(user_router, prefix=settings.API_V1_STR)
+    app.include_router(oauth_router, prefix=settings.API_V1_STR)
     
     # Include LMS routers (commented out until handlers are implemented)
     # app.include_router(department_router, prefix=settings.API_V1_STR)

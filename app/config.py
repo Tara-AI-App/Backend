@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     
     # Server settings
     HOST: str = "0.0.0.0"
-    PORT: int = 8000
+    PORT: int = 9000
     DEBUG: bool = True
     
     # CORS settings
@@ -29,6 +29,11 @@ class Settings(BaseSettings):
     
     # Security settings
     SECRET_KEY: str = Field(description="Secret key for JWT token signing")
+    
+    # GitHub OAuth settings
+    GITHUB_CLIENT_ID: str = Field(description="GitHub OAuth client ID")
+    GITHUB_CLIENT_SECRET: str = Field(description="GitHub OAuth client secret")
+    GITHUB_REDIRECT_URI: str = Field(description="GitHub OAuth redirect URI")
     
     class Config:
         env_file = ".env"

@@ -63,6 +63,7 @@ class UserModel(Base):
     manager = relationship("UserModel", remote_side=[id], back_populates="subordinates")
     subordinates = relationship("UserModel", back_populates="manager")
     courses = relationship("CourseModel", back_populates="user")
+    oauth_tokens = relationship("OAuthTokenModel", back_populates="user")
 
 class CourseModel(Base):
     """Course model"""
@@ -91,3 +92,19 @@ class ModuleModel(Base):
     
     # Relationships
     course = relationship("CourseModel", back_populates="modules")
+
+class OAuthTokenModel(Base):
+    """OAuth token model for storing GitHub and Google Drive tokens"""
+    __tablename__ = "user_oauth_tokens"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    provider = Column(String(50), nullable=False)
+    access_token = Column(Text, nullable=False)
+    refresh_token = Column(Text, nullable=True)
+    token_type = Column(String(50), nullable=True, default="Bearer")
+    expires_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relationships
+    user = relationship("UserModel", back_populates="oauth_tokens")
