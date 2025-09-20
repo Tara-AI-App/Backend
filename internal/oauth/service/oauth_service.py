@@ -1,7 +1,7 @@
 import httpx
 import asyncio
 import uuid
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from uuid import UUID
 from datetime import datetime, timedelta
 from internal.oauth.model.oauth_dto import (
@@ -98,5 +98,15 @@ class OAuthService:
         """Get user's GitHub token"""
         return await self.oauth_repository.get_token_by_user_and_provider(
             user_id, "github"
+        )
+
+    async def get_user_tokens_by_provider(
+        self, 
+        user_id: UUID, 
+        providers: Optional[List[str]] = None
+    ) -> List[OAuthTokenEntity]:
+        """Get user's OAuth tokens, optionally filtered by provider(s)"""
+        return await self.oauth_repository.get_tokens_by_user_and_provider(
+            user_id, providers
         )
 

@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from uuid import UUID
 
@@ -45,3 +45,13 @@ class OAuthTokenUpdate(BaseModel):
     access_token: Optional[str] = None
     refresh_token: Optional[str] = None
     expires_at: Optional[datetime] = None
+
+
+class OAuthTokenListResponse(BaseModel):
+    """Response model for list of OAuth tokens"""
+    tokens: List[OAuthTokenResponse]
+    total: int
+    providers: Optional[List[str]] = None
+
+    class Config:
+        from_attributes = True

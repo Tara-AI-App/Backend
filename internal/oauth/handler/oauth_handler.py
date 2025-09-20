@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
 from sqlalchemy.orm import Session
 from app.database.connection import get_db
 from internal.oauth.model.oauth_dto import (
     OAuthTokenResponse, 
-    GitHubOAuthResponse
+    GitHubOAuthResponse,
+    OAuthTokenListResponse
 )
 from internal.oauth.service.oauth_service import OAuthService
 from internal.oauth.repository.oauth_repository_db import DatabaseOAuthRepository
@@ -166,3 +167,39 @@ async def get_github_token(
         )
 
 
+@router.get("/tokens", response_model=OAuthTokenListResponse)
+async def get_user_oauth_tokens(
+    providers: Optional[List[str]] = Query(None, description="Filter by OAuth provider(s) (e.g., 'github', 'google'). Can specify multiple providers."),
+    user_id: str = Depends(get_current_user_id),
+    oauth_service: OAuthService = Depends(get_oauth_service)
+):
+    """Get current user's OAuth tokens, optionally filtered by provider(s)"""
+    try:
+        user_id = UUID(user_id)
+        token_entities = await oauth_service.get_user_tokens_by_provider(user_id, providers)
+        
+        # Convert entities to response DTOs
+        token_responses = [
+            OAuthTokenResponse(
+                id=token.id,
+                access_token=token.access_token,
+                user_id=token.user_id,
+                provider=token.provider,
+                token_type=token.token_type,
+                created_at=token.created_at
+            )
+            for token in token_entities
+        ]
+        
+        return OAuthTokenListResponse(
+            tokens=token_responses,
+            total=len(token_responses),
+            providers=providers
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get OAuth tokens: {str(e)}"
+        )

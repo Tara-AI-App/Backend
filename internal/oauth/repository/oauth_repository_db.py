@@ -1,7 +1,7 @@
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
 from sqlalchemy.orm import Session
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 from app.database.models import OAuthTokenModel
 from internal.oauth.model.oauth_entity import OAuthTokenEntity
 from internal.oauth.repository.oauth_repository import OAuthRepository
@@ -47,3 +47,19 @@ class DatabaseOAuthRepository(OAuthRepository):
         if db_token:
             return OAuthTokenEntity.from_model(db_token)
         return None
+
+    async def get_tokens_by_user_and_provider(
+        self, 
+        user_id: UUID, 
+        providers: Optional[List[str]] = None
+    ) -> List[OAuthTokenEntity]:
+        """Get OAuth tokens by user ID and optional provider filter(s)"""
+        query = self.db.query(OAuthTokenModel).filter(
+            OAuthTokenModel.user_id == user_id
+        )
+        
+        if providers:
+            query = query.filter(OAuthTokenModel.provider.in_(providers))
+        
+        db_tokens = query.all()
+        return [OAuthTokenEntity.from_model(token) for token in db_tokens]
