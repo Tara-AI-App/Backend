@@ -8,14 +8,9 @@ from uuid import UUID
 class UserCreateRequest:
     """DTO for creating a new user"""
     
-    department_id: Optional[UUID] = None
-    position_id: Optional[UUID] = None
-    manager_id: Optional[UUID] = None
-    location_id: Optional[UUID] = None
-    name: str = ""
-    image: Optional[str] = None
-    email: str = ""
-    password: str = ""
+    name: str
+    email: str
+    password: str
     country: Optional[str] = None
 
 
@@ -42,8 +37,19 @@ class UserUpdateRequest:
 
 
 @dataclass
+class UserCreateResponse:
+    """DTO for user creation response"""
+    
+    id: UUID
+    name: str
+    email: str
+    country: Optional[str]
+    created_at: datetime
+
+
+@dataclass
 class UserResponse:
-    """DTO for user response"""
+    """DTO for user response (used for login and other operations)"""
     
     id: UUID
     department_id: Optional[UUID]

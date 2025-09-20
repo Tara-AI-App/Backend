@@ -3,7 +3,7 @@ from uuid import UUID
 from datetime import datetime, timezone
 from jose import jwt
 from internal.user.model.user_entity import User
-from internal.user.model.user_dto import UserCreateRequest, UserLoginRequest, UserLoginResponse, UserResponse
+from internal.user.model.user_dto import UserCreateRequest, UserLoginRequest, UserLoginResponse, UserResponse, UserCreateResponse
 from internal.user.repository.user_repository import UserRepository
 from app.config import settings
 
@@ -15,15 +15,10 @@ class UserService:
         self.user_repository = user_repository
         self.secret_key = secret_key or settings.SECRET_KEY
     
-    async def create_user(self, user_data: UserCreateRequest) -> UserResponse:
+    async def create_user(self, user_data: UserCreateRequest) -> UserCreateResponse:
         """Create a new user"""
         user = User(
-            department_id=user_data.department_id,
-            position_id=user_data.position_id,
-            manager_id=user_data.manager_id,
-            location_id=user_data.location_id,
             name=user_data.name,
-            image=user_data.image,
             email=user_data.email,
             password=user_data.password,
             country=user_data.country,
@@ -32,14 +27,9 @@ class UserService:
         
         created_user = await self.user_repository.create_user(user)
         
-        return UserResponse(
+        return UserCreateResponse(
             id=created_user.id,
-            department_id=created_user.department_id,
-            position_id=created_user.position_id,
-            manager_id=created_user.manager_id,
-            location_id=created_user.location_id,
             name=created_user.name,
-            image=created_user.image,
             email=created_user.email,
             country=created_user.country,
             created_at=created_user.created_at

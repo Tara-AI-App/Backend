@@ -34,6 +34,22 @@ curl -X POST "http://localhost:8000/api/v1/users/register" \
   }'
 ```
 
+**Note:** Only `name`, `email`, `password`, and `country` fields are required. The `country` field is optional.
+
+**Response Format:**
+The registration endpoint returns a simplified user object with only the essential fields:
+```json
+{
+  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "name": "John Doe",
+  "email": "john@example.com",
+  "country": "USA",
+  "created_at": "2025-09-20T06:30:15.207Z"
+}
+```
+
+**Note:** The login endpoint returns a full user object with all organizational fields for backward compatibility.
+
 ### Login user
 ```bash
 curl -X POST "http://localhost:8000/api/v1/users/login" \

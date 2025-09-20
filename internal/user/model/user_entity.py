@@ -10,15 +10,15 @@ class User:
     """User domain entity"""
     
     id: Optional[UUID] = None
+    name: str = ""
+    email: str = ""
+    password: str = ""
+    country: Optional[str] = None
     department_id: Optional[UUID] = None
     position_id: Optional[UUID] = None
     manager_id: Optional[UUID] = None
     location_id: Optional[UUID] = None
-    name: str = ""
     image: Optional[str] = None
-    email: str = ""
-    password: str = ""
-    country: Optional[str] = None
     created_at: Optional[datetime] = None
     
     def __post_init__(self):

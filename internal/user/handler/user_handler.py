@@ -4,7 +4,7 @@ from typing import Optional
 from uuid import UUID
 from sqlalchemy.orm import Session
 from app.database.connection import get_db
-from internal.user.model.user_dto import UserCreateRequest, UserLoginRequest, UserLoginResponse, UserResponse
+from internal.user.model.user_dto import UserCreateRequest, UserLoginRequest, UserLoginResponse, UserResponse, UserCreateResponse
 from internal.user.service.user_service import UserService
 from internal.user.repository.user_repository_db import DatabaseUserRepository
 
@@ -36,7 +36,7 @@ def get_current_user(
     return payload
 
 
-@router.post("/register", response_model=UserResponse)
+@router.post("/register", response_model=UserCreateResponse)
 async def register_user(
     user_data: UserCreateRequest,
     user_service: UserService = Depends(get_user_service)

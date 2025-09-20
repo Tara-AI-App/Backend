@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 # from internal.domain.handler.item_handler import router as item_router
 from internal.ai.handler.ai_handler import router as ai_router
 from internal.user.handler.user_handler import router as user_router
@@ -8,6 +9,7 @@ from internal.user.handler.user_handler import router as user_router
 #     user_router, course_router, module_router
 # )
 from app.config import settings
+from app.database.connection import SessionLocal
 
 def create_app() -> FastAPI:
     """Create and configure FastAPI application"""
@@ -48,6 +50,19 @@ def create_app() -> FastAPI:
     @app.get("/health")
     async def health_check():
         return {"status": "healthy"}
+
+    @app.on_event("startup")
+    async def startup_event():
+        """Test database connection on startup"""
+        try:
+            # Test database connection
+            db = SessionLocal()
+            db.execute(text("SELECT 1"))
+            db.close()
+            print("✅ Database connection successful")
+        except Exception as e:
+            print(f"❌ Database connection failed: {e}")
+            raise e
 
     return app
 
