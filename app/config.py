@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     
     # Security settings
     SECRET_KEY: str = Field(description="Secret key for JWT token signing")
+    JWT_EXPIRATION_SECONDS: int = Field(default=2592000, description="JWT token expiration time in seconds (default: 1 month)")
     
     # GitHub OAuth settings
     GITHUB_CLIENT_ID: str = Field(description="GitHub OAuth client ID")

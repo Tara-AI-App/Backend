@@ -9,6 +9,7 @@ from internal.oauth.handler.oauth_handler import router as oauth_router
 #     department_router, position_router, location_router,
 #     user_router, course_router, module_router
 # )
+from internal.auth.middleware import JWTMiddleware
 from app.config import settings
 from app.database.connection import SessionLocal
 
@@ -30,6 +31,9 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    
+    # Add JWT authentication middleware
+    app.middleware("http")(JWTMiddleware())
 
     # Include routers
     # app.include_router(item_router, prefix=settings.API_V1_STR)

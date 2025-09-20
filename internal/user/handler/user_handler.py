@@ -7,6 +7,7 @@ from app.database.connection import get_db
 from internal.user.model.user_dto import UserCreateRequest, UserLoginRequest, UserLoginResponse, UserResponse, UserCreateResponse
 from internal.user.service.user_service import UserService
 from internal.user.repository.user_repository_db import DatabaseUserRepository
+from internal.auth.middleware import get_current_user_id, get_current_user_payload
 
 router = APIRouter(prefix="/users", tags=["users"])
 security = HTTPBearer()
@@ -68,11 +69,11 @@ async def login_user(
 
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(
-    current_user: dict = Depends(get_current_user),
+    user_id: str = Depends(get_current_user_id),
     user_service: UserService = Depends(get_user_service)
 ):
     """Get current user information"""
-    user_id = UUID(current_user["user_id"])
+    user_id = UUID(user_id)
     user = await user_service.get_user_by_id(user_id)
     
     if not user:
@@ -87,6 +88,7 @@ async def get_current_user_info(
 @router.get("/{user_id}", response_model=UserResponse)
 async def get_user_by_id(
     user_id: UUID,
+    current_user_id: str = Depends(get_current_user_id),
     user_service: UserService = Depends(get_user_service)
 ):
     """Get user by ID"""

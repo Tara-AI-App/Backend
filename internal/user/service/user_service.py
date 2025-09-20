@@ -49,7 +49,7 @@ class UserService:
         token_payload = {
             "user_id": str(user.id),
             "email": user.email,
-            "exp": datetime.now(timezone.utc).timestamp() + 3600  # 1 hour expiration
+            "exp": datetime.now(timezone.utc).timestamp() + settings.JWT_EXPIRATION_SECONDS  # Configurable expiration
         }
         
         access_token = jwt.encode(token_payload, self.secret_key, algorithm="HS256")

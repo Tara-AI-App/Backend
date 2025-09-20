@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Query
+from fastapi import APIRouter, HTTPException, status, Query, Request, Depends
 from typing import List, Optional
 from internal.ai.model.ai_dto import (
     ChatRequest, ChatResponse,
@@ -8,6 +8,7 @@ from internal.ai.model.ai_dto import (
 from internal.ai.service.ai_use_cases import AIUseCases
 from internal.ai.service.ai_service import OpenAIService, LocalLLMService
 from internal.ai.repository.ai_repository_impl import InMemoryAIRepository
+from internal.auth.middleware import get_current_user_id
 
 # Create router
 router = APIRouter(prefix="/ai", tags=["ai"])
@@ -19,7 +20,7 @@ ai_service = OpenAIService(api_key="your-api-key-here")  # Placeholder
 ai_use_cases = AIUseCases(ai_service, ai_repository)
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat_with_ai(request: ChatRequest):
+async def chat_with_ai(request: ChatRequest, user_id: str = Depends(get_current_user_id)):
     """Chat with AI assistant"""
     try:
         return await ai_use_cases.chat_with_ai(request)
@@ -30,7 +31,7 @@ async def chat_with_ai(request: ChatRequest):
         )
 
 @router.post("/analyze", response_model=AIAnalysisResponse)
-async def analyze_item(request: AIAnalysisRequest):
+async def analyze_item(request: AIAnalysisRequest, user_id: str = Depends(get_current_user_id)):
     """Analyze an item using AI"""
     try:
         return await ai_use_cases.analyze_item_with_ai(request)
@@ -41,7 +42,7 @@ async def analyze_item(request: AIAnalysisRequest):
         )
 
 @router.post("/recommendations", response_model=AIRecommendationResponse)
-async def get_recommendations(request: AIRecommendationRequest):
+async def get_recommendations(request: AIRecommendationRequest, user_id: str = Depends(get_current_user_id)):
     """Get AI-powered item recommendations"""
     try:
         return await ai_use_cases.get_item_recommendations(request)
@@ -52,7 +53,7 @@ async def get_recommendations(request: AIRecommendationRequest):
         )
 
 @router.post("/enhance-description/{item_id}")
-async def enhance_description(item_id: int, current_description: str = Query(...)):
+async def enhance_description(item_id: int, current_description: str = Query(...), user_id: str = Depends(get_current_user_id)):
     """Enhance item description using AI"""
     try:
         enhanced = await ai_use_cases.enhance_item_description(item_id, current_description)
@@ -64,7 +65,7 @@ async def enhance_description(item_id: int, current_description: str = Query(...
         )
 
 @router.post("/analyze-pricing/{item_id}")
-async def analyze_pricing(item_id: int, current_price: float = Query(...)):
+async def analyze_pricing(item_id: int, current_price: float = Query(...), user_id: str = Depends(get_current_user_id)):
     """Analyze item pricing using AI"""
     try:
         analysis = await ai_use_cases.analyze_item_pricing(item_id, current_price)
@@ -76,7 +77,7 @@ async def analyze_pricing(item_id: int, current_price: float = Query(...)):
         )
 
 @router.get("/conversations/{user_id}")
-async def get_conversation_history(user_id: str, limit: int = Query(10, ge=1, le=100)):
+async def get_conversation_history(user_id: str, limit: int = Query(10, ge=1, le=100), current_user_id: str = Depends(get_current_user_id)):
     """Get user's conversation history"""
     try:
         conversations = await ai_use_cases.get_conversation_history(user_id, limit)
@@ -88,7 +89,7 @@ async def get_conversation_history(user_id: str, limit: int = Query(10, ge=1, le
         )
 
 @router.get("/analyses/{item_id}")
-async def get_item_analyses(item_id: int):
+async def get_item_analyses(item_id: int, user_id: str = Depends(get_current_user_id)):
     """Get AI analyses for an item"""
     try:
         analyses = await ai_use_cases.get_analysis_history(item_id)
@@ -100,7 +101,7 @@ async def get_item_analyses(item_id: int):
         )
 
 @router.get("/recommendations/{user_id}")
-async def get_recommendation_history(user_id: str):
+async def get_recommendation_history(user_id: str, current_user_id: str = Depends(get_current_user_id)):
     """Get user's recommendation history"""
     try:
         recommendations = await ai_use_cases.get_recommendation_history(user_id)

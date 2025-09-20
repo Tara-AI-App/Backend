@@ -12,6 +12,7 @@ from internal.oauth.service.oauth_service import OAuthService
 from internal.oauth.repository.oauth_repository_db import DatabaseOAuthRepository
 from internal.user.service.user_service import UserService
 from internal.user.repository.user_repository_db import DatabaseUserRepository
+from internal.auth.middleware import get_current_user_id, get_current_user_payload
 
 router = APIRouter(prefix="/oauth", tags=["oauth"])
 security = HTTPBearer()
@@ -90,13 +91,13 @@ async def github_oauth_callback_get(
 @router.post("/github/save-token", response_model=OAuthTokenResponse)
 async def save_github_token(
     request: dict,
-    current_user: dict = Depends(get_current_user),
+    user_id: str = Depends(get_current_user_id),
     oauth_service: OAuthService = Depends(get_oauth_service)
 ):
     """Save GitHub OAuth token for a user"""
     try:
         # Get user ID from JWT token
-        user_id = UUID(current_user["user_id"])
+        user_id = UUID(user_id)
         
         # Extract access token from request
         access_token = request.get("access_token")
@@ -134,12 +135,12 @@ async def save_github_token(
 
 @router.get("/github/token", response_model=OAuthTokenResponse)
 async def get_github_token(
-    current_user: dict = Depends(get_current_user),
+    user_id: str = Depends(get_current_user_id),
     oauth_service: OAuthService = Depends(get_oauth_service)
 ):
     """Get current user's GitHub token"""
     try:
-        user_id = UUID(current_user["user_id"])
+        user_id = UUID(user_id)
         token_entity = await oauth_service.get_user_github_token(user_id)
         
         if not token_entity:
