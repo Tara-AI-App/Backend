@@ -63,3 +63,22 @@ class DatabaseOAuthRepository(OAuthRepository):
         
         db_tokens = query.all()
         return [OAuthTokenEntity.from_model(token) for token in db_tokens]
+
+    async def update_token(self, token: OAuthTokenEntity) -> OAuthTokenEntity:
+        """Update an existing OAuth token"""
+        db_token = self.db.query(OAuthTokenModel).filter(
+            OAuthTokenModel.id == token.id
+        ).first()
+        
+        if not db_token:
+            raise ValueError(f"Token with ID {token.id} not found")
+        
+        # Update fields
+        db_token.access_token = token.access_token
+        db_token.refresh_token = token.refresh_token
+        db_token.token_type = token.token_type
+        db_token.expires_at = token.expires_at
+        
+        self.db.commit()
+        self.db.refresh(db_token)
+        return OAuthTokenEntity.from_model(db_token)

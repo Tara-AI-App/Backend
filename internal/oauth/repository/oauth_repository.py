@@ -29,3 +29,8 @@ class OAuthRepository(ABC):
     ) -> List[OAuthTokenEntity]:
         """Get OAuth tokens by user ID and optional provider filter(s)"""
         pass
+
+    @abstractmethod
+    async def update_token(self, token: OAuthTokenEntity) -> OAuthTokenEntity:
+        """Update an existing OAuth token"""
+        pass

@@ -7,6 +7,7 @@ from app.database.connection import get_db
 from internal.oauth.model.oauth_dto import (
     OAuthTokenResponse, 
     GitHubOAuthResponse,
+    GoogleDriveOAuthResponse,
     OAuthTokenListResponse
 )
 from internal.oauth.service.oauth_service import OAuthService
@@ -202,4 +203,134 @@ async def get_user_oauth_tokens(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get OAuth tokens: {str(e)}"
+        )
+
+
+@router.get("/drive/auth-url")
+async def get_google_drive_auth_url(
+    state: Optional[str] = Query(None, description="Optional state parameter for security"),
+    oauth_service: OAuthService = Depends(get_oauth_service)
+):
+    """Get Google Drive OAuth authorization URL"""
+    try:
+        auth_url = oauth_service.get_google_drive_auth_url(state)
+        return {"auth_url": auth_url}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate Google Drive auth URL: {str(e)}"
+        )
+
+
+@router.get("/drive/callback", response_model=GoogleDriveOAuthResponse)
+async def google_drive_oauth_callback_get(
+    code: str = Query(..., description="Google authorization code"),
+    state: Optional[str] = Query(None, description="State parameter"),
+    oauth_service: OAuthService = Depends(get_oauth_service)
+):
+    """Handle Google Drive OAuth callback (GET) and exchange code for token"""
+    try:
+        # Exchange code for token
+        google_response = await oauth_service.exchange_google_drive_code_for_token(code)
+        
+        return google_response
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Google Drive OAuth callback failed: {str(e)}"
+        )
+
+
+@router.post("/drive/save-token", response_model=OAuthTokenResponse)
+async def save_google_drive_token(
+    request: dict,
+    user_id: str = Depends(get_current_user_id),
+    oauth_service: OAuthService = Depends(get_oauth_service)
+):
+    """Save Google Drive OAuth token for a user"""
+    try:
+        # Get user ID from JWT token
+        user_id = UUID(user_id)
+        
+        # Log the incoming request
+        print(f"📥 Frontend save-token request:")
+        print(f"   User ID: {user_id}")
+        print(f"   Request body: {request}")
+        
+        # Extract access token from request
+        access_token = request.get("access_token")
+        refresh_token = request.get("refresh_token")
+        
+        print(f"🔑 Extracted tokens:")
+        print(f"   Access token: {access_token[:20]}..." if access_token else "   Access token: None")
+        print(f"   Refresh token: {refresh_token[:20]}..." if refresh_token else "   Refresh token: None")
+        
+        if not access_token:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="access_token is required"
+            )
+        
+        # Create Google Drive response object
+        google_response = GoogleDriveOAuthResponse(
+            access_token=access_token,
+            refresh_token=refresh_token or "",
+            token_type="bearer",
+            expires_in=3600,
+            scope="https://www.googleapis.com/auth/drive"
+        )
+        
+        token_entity = await oauth_service.save_google_drive_token(user_id, google_response)
+        return OAuthTokenResponse(
+            id=token_entity.id,
+            access_token=token_entity.access_token,
+            user_id=token_entity.user_id,
+            provider=token_entity.provider,
+            token_type=token_entity.token_type,
+            created_at=token_entity.created_at
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to save Google Drive token: {str(e)}"
+        )
+
+
+@router.post("/drive/refresh-token")
+async def refresh_google_drive_token(
+    user_id: str = Depends(get_current_user_id),
+    oauth_service: OAuthService = Depends(get_oauth_service)
+):
+    """Refresh Google Drive access token for current user"""
+    try:
+        user_id = UUID(user_id)
+        
+        # Get valid token (will refresh if needed)
+        valid_token = await oauth_service.get_valid_google_drive_token(user_id)
+        
+        if not valid_token:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No valid Google Drive token found or refresh failed"
+            )
+        
+        return {
+            "message": "Token refreshed successfully",
+            "access_token": valid_token[:20] + "...",  # Only show first 20 chars for security
+            "expires_at": "Updated in database"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to refresh Google Drive token: {str(e)}"
         )

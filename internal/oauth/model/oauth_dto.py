@@ -30,6 +30,21 @@ class GitHubOAuthResponse(BaseModel):
     scope: str
 
 
+class GoogleDriveOAuthRequest(BaseModel):
+    """Request model for Google Drive OAuth callback"""
+    code: str
+    state: Optional[str] = None
+
+
+class GoogleDriveOAuthResponse(BaseModel):
+    """Response model for Google Drive OAuth"""
+    access_token: str
+    refresh_token: str
+    token_type: str
+    expires_in: int
+    scope: str
+
+
 class OAuthTokenCreate(BaseModel):
     """Model for creating OAuth token"""
     user_id: UUID

@@ -36,6 +36,11 @@ class Settings(BaseSettings):
     GITHUB_CLIENT_SECRET: str = Field(description="GitHub OAuth client secret")
     GITHUB_REDIRECT_URI: str = Field(description="GitHub OAuth redirect URI")
     
+    # Google Drive OAuth settings
+    GOOGLE_CLIENT_ID: str = Field(description="Google OAuth client ID")
+    GOOGLE_CLIENT_SECRET: str = Field(description="Google OAuth client secret")
+    GOOGLE_REDIRECT_URI: str = Field(description="Google OAuth redirect URI")
+    
     class Config:
         env_file = ".env"
         case_sensitive = True

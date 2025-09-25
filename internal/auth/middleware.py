@@ -47,6 +47,8 @@ class JWTMiddleware:
             "/api/v1/users/register",
             "/api/v1/oauth/github/auth-url",  # OAuth auth URL doesn't need auth
             "/api/v1/oauth/github/callback",  # OAuth callback doesn't need auth
+            "/api/v1/oauth/drive/auth-url",  # Google Drive OAuth auth URL doesn't need auth
+            "/api/v1/oauth/drive/callback",  # Google Drive OAuth callback doesn't need auth
             "/",
             "/health",
             "/docs",
