@@ -23,13 +23,29 @@ def create_app() -> FastAPI:
         redoc_url=settings.REDOC_URL,
     )
 
-    # Add CORS middleware
+    # Add CORS middleware - must be added before other middleware
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.ALLOWED_HOSTS,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_origins=[
+            "http://localhost:3000",  # Next.js dev server
+            "http://127.0.0.1:3000",  # Alternative localhost
+            "http://localhost:3001",  # Alternative port
+            "http://127.0.0.1:3001",  # Alternative localhost and port
+        ],
+        allow_credentials=True,  # Allow credentials (cookies, authorization headers)
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],  # Specific methods
+        allow_headers=[
+            "accept",
+            "accept-encoding", 
+            "authorization",
+            "content-type",
+            "dnt",
+            "origin",
+            "user-agent",
+            "x-csrftoken",
+            "x-requested-with",
+        ],  # Specific headers that are commonly needed
+        expose_headers=["*"],  # Headers that the frontend can access
     )
     
     # Add JWT authentication middleware
@@ -56,6 +72,15 @@ def create_app() -> FastAPI:
     @app.get("/health")
     async def health_check():
         return {"status": "healthy"}
+    
+    @app.get("/cors-test")
+    async def cors_test():
+        return {"message": "CORS is working!", "timestamp": "2025-01-27"}
+    
+    @app.options("/{path:path}")
+    async def cors_preflight(path: str):
+        """Handle CORS preflight requests"""
+        return {"message": "CORS preflight handled"}
 
     @app.on_event("startup")
     async def startup_event():

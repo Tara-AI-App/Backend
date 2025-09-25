@@ -36,15 +36,23 @@ class JWTMiddleware:
     async def __call__(self, request: Request, call_next):
         """Middleware function to handle JWT authentication"""
         
+        # Skip authentication for CORS preflight requests
+        if request.method == "OPTIONS":
+            response = await call_next(request)
+            return response
+        
         # Skip authentication for specific paths
         skip_paths = [
             "/api/v1/users/login",
             "/api/v1/users/register",
+            "/api/v1/oauth/github/auth-url",  # OAuth auth URL doesn't need auth
+            "/api/v1/oauth/github/callback",  # OAuth callback doesn't need auth
             "/",
             "/health",
             "/docs",
             "/redoc",
-            "/openapi.json"
+            "/openapi.json",
+            "/cors-test"  # Add the CORS test endpoint
         ]
         
         # Check if current path should be skipped
