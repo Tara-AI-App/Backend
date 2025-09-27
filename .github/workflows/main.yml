@@ -102,6 +102,9 @@ jobs:
             --port "9000" \
             --allow-unauthenticated \
             --ingress internal-and-cloud-load-balancing \
+            --vpc-egress=private-ranges-only \
+            --network=vpc-tara \
+            --subnet=subnet-us \
             --service-account="${GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN}" \
             --min-instances=0 \
             --max-instances=2 \
