@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Float, DateTime, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, Float, DateTime, Boolean, ForeignKey, ARRAY
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -66,32 +66,57 @@ class UserModel(Base):
     oauth_tokens = relationship("OAuthTokenModel", back_populates="user")
 
 class CourseModel(Base):
-    """Course model"""
+    """Course model for AI-generated courses"""
     __tablename__ = "courses"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    name = Column(String(255), nullable=False)
+    title = Column(String(500), nullable=False)
+    description = Column(Text, nullable=True)
+    estimated_duration = Column(Integer, nullable=True)  # in hours
+    difficulty = Column(String(50), nullable=True)  # Beginner, Intermediate, Advanced
+    learning_objectives = Column(ARRAY(String), nullable=True)  # Array of learning objectives
+    source_from = Column(ARRAY(String), nullable=True)  # Array of source URLs
     progress = Column(Float, default=0.0, nullable=False)
     is_completed = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     
     # Relationships
     user = relationship("UserModel", back_populates="courses")
     modules = relationship("ModuleModel", back_populates="course")
 
 class ModuleModel(Base):
-    """Module model"""
+    """Module model for course modules"""
     __tablename__ = "modules"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     course_id = Column(UUID(as_uuid=True), ForeignKey("courses.id"), nullable=False)
-    name = Column(String(255), nullable=False)
+    title = Column(String(500), nullable=False)
+    order_index = Column(Integer, nullable=False, default=0)  # Order of modules in course
     is_completed = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     
     # Relationships
     course = relationship("CourseModel", back_populates="modules")
+    lessons = relationship("LessonModel", back_populates="module", cascade="all, delete-orphan")
+
+class LessonModel(Base):
+    """Lesson model for course lessons"""
+    __tablename__ = "lessons"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    module_id = Column(UUID(as_uuid=True), ForeignKey("modules.id"), nullable=False)
+    title = Column(String(500), nullable=False)
+    content = Column(Text, nullable=False)
+    index = Column(Integer, nullable=False, default=0)  # Order of lessons in module
+    is_completed = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
+    # Relationships
+    module = relationship("ModuleModel", back_populates="lessons")
 
 class OAuthTokenModel(Base):
     """OAuth token model for storing GitHub and Google Drive tokens"""

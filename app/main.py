@@ -2,9 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 # from internal.domain.handler.item_handler import router as item_router
-from internal.ai.handler.ai_handler import router as ai_router
 from internal.user.handler.user_handler import router as user_router
 from internal.oauth.handler.oauth_handler import router as oauth_router
+from internal.ai.course.handler.course_handler import router as course_router
 # from internal.domain.handler.lms_handler import (
 #     department_router, position_router, location_router,
 #     user_router, course_router, module_router
@@ -31,7 +31,7 @@ def create_app() -> FastAPI:
             "http://127.0.0.1:3000",  # Alternative localhost
             "http://localhost:3001",  # Alternative port
             "http://127.0.0.1:3001",  # Alternative localhost and port
-            "https://taraai.tech",  # FastAPI dev server
+            "https://taraai.tech",  
         ],
         allow_credentials=True,  # Allow credentials (cookies, authorization headers)
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],  # Specific methods
@@ -54,9 +54,9 @@ def create_app() -> FastAPI:
 
     # Include routers
     # app.include_router(item_router, prefix=settings.API_V1_STR)
-    app.include_router(ai_router, prefix=settings.API_V1_STR)
     app.include_router(user_router, prefix=settings.API_V1_STR)
     app.include_router(oauth_router, prefix=settings.API_V1_STR)
+    app.include_router(course_router, prefix=settings.API_V1_STR)
     
     # Include LMS routers (commented out until handlers are implemented)
     # app.include_router(department_router, prefix=settings.API_V1_STR)
