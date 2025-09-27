@@ -141,7 +141,26 @@ jobs:
           echo "Service Account: ${GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN}"
           echo ""
           
-          # Deploy with proper environment variable handling
+          # Create environment variables file to handle special characters
+          cat > env_vars.yaml << 'EOF'
+          DATABASE_URL: "${DATABASE_URL}"
+          SECRET_KEY: "${SECRET_KEY}"
+          GH_CLIENT_ID: "${GH_CLIENT_ID}"
+          GH_CLIENT_SECRET: "${GH_CLIENT_SECRET}"
+          GH_REDIRECT_URI: "${GH_REDIRECT_URI}"
+          GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID}"
+          GOOGLE_CLIENT_SECRET: "${GOOGLE_CLIENT_SECRET}"
+          GOOGLE_REDIRECT_URI: "${GOOGLE_REDIRECT_URI}"
+          EOF
+          
+          # Substitute environment variables in the file
+          envsubst < env_vars.yaml > env_vars_final.yaml
+          
+          echo "Environment variables file contents:"
+          cat env_vars_final.yaml
+          echo ""
+          
+          # Deploy with environment variables file
           gcloud run deploy ${{ env.CLOUD_RUN_SERVICE_NAME }} \
             --image "${{ env.FULL_IMAGE_TAG_SHA }}" \
             --region "${{ env.GCP_REGION }}" \
@@ -155,15 +174,11 @@ jobs:
             --timeout=3600 \
             --cpu=2 \
             --memory=4Gi \
-            --set-env-vars="DATABASE_URL=${DATABASE_URL}" \
-            --set-env-vars="SECRET_KEY=${SECRET_KEY}" \
-            --set-env-vars="GH_CLIENT_ID=${GH_CLIENT_ID}" \
-            --set-env-vars="GH_CLIENT_SECRET=${GH_CLIENT_SECRET}" \
-            --set-env-vars="GH_REDIRECT_URI=${GH_REDIRECT_URI}" \
-            --set-env-vars="GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}" \
-            --set-env-vars="GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}" \
-            --set-env-vars="GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}" \
+            --env-vars-file=env_vars_final.yaml \
             --verbosity=info
+          
+          # Clean up temporary files
+          rm -f env_vars.yaml env_vars_final.yaml
           
           echo "=== DEPLOYMENT COMMAND COMPLETED ==="
 
