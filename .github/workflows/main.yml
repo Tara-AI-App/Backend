@@ -75,23 +75,14 @@ jobs:
             --platform "managed" \
             --port "9000" \
             --allow-unauthenticated \
+            --ingress all \
             --service-account="${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN }}" \
             --min-instances=0 \
             --max-instances=2 \
             --timeout=3600 \
             --cpu=2 \
             --memory=4Gi \
-            --set-env-vars="GCP_WORKLOAD_IDENTITY_PROVIDER=${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}" \
-            --set-env-vars="GCP_SERVICE_ACCOUNT_EMAIL=${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}" \
-            --set-env-vars="GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN=${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN }}" \
-            --set-env-vars="DATABASE_URL=${{ secrets.DATABASE_URL }}" \
-            --set-env-vars="SECRET_KEY=${{ secrets.SECRET_KEY }}" \
-            --set-env-vars="GH_CLIENT_ID=${{ secrets.GH_CLIENT_ID }}" \
-            --set-env-vars="GH_CLIENT_SECRET=${{ secrets.GH_CLIENT_SECRET }}" \
-            --set-env-vars="GH_REDIRECT_URI=${{ secrets.GH_REDIRECT_URI }}" \
-            --set-env-vars="GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" \
-            --set-env-vars="GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" \
-            --set-env-vars="GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}"
+            --set-env-vars="GCP_WORKLOAD_IDENTITY_PROVIDER=${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }},GCP_SERVICE_ACCOUNT_EMAIL=${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }},GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN=${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN }},DATABASE_URL=${{ secrets.DATABASE_URL }},SECRET_KEY=${{ secrets.SECRET_KEY }},GH_CLIENT_ID=${{ secrets.GH_CLIENT_ID }},GH_CLIENT_SECRET=${{ secrets.GH_CLIENT_SECRET }},GH_REDIRECT_URI=${{ secrets.GH_REDIRECT_URI }},GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }},GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }},GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}"
 
 
       - name: Display Cloud Run Service URL
