@@ -35,12 +35,9 @@ class AiCourseService:
             # Update course_data with the valid token
             course_data.token_drive = valid_drive_token
             
-            # # Call external API
-            # external_response = await self._call_external_api(course_data)
-            
-            # Create example course data for now
-            external_response = self._create_example_course()
-            logger.info(f"Example course created: {external_response.title}")
+            # Call external API
+            external_response = await self._call_external_api(course_data)
+            logger.info(f"External API course created: {external_response.title}")
             
             # Save course to database
             response = await self.course_repository.save_course(user_id, external_response)
@@ -50,8 +47,8 @@ class AiCourseService:
             
         except Exception as e:
             logger.error(f"Error generating course: {str(e)}")
-            # Return basic response even if external API fails
-            return AiCourseGenerateResponse(course_id=uuid4())
+            # Re-raise the exception to propagate the error
+            raise e
 
     async def _call_external_api(self, course_data: AiCourseGenerateRequest) -> ExternalAiCourseGenerateResponse:
         """Call external AI API to generate course content"""
@@ -59,11 +56,17 @@ class AiCourseService:
         
         payload = {
             "token_github": course_data.token_github,
-            "token_drive": course_data.token_drive
+            "token_drive": course_data.token_drive,
+            "prompt": course_data.prompt,
+            "files_url": course_data.files_url or ""
+        }
+        
+        headers = {
+            "Content-Type": "application/json"
         }
         
         async with httpx.AsyncClient(timeout=settings.AI_API_TIMEOUT) as client:
-            response = await client.post(url, json=payload)
+            response = await client.post(url, json=payload, headers=headers)
             response.raise_for_status()
             
             data = response.json()
@@ -75,13 +78,15 @@ class AiCourseService:
                 for lesson_data in module_data.get("lessons", []):
                     lesson = Lesson(
                         title=lesson_data["title"],
-                        content=lesson_data["content"]
+                        content=lesson_data["content"],
+                        index=lesson_data["index"]
                     )
                     lessons.append(lesson)
                 
                 module = Module(
                     title=module_data["title"],
-                    lessons=lessons
+                    lessons=lessons,
+                    index=module_data["index"]
                 )
                 modules.append(module)
             
@@ -111,88 +116,3 @@ class AiCourseService:
         except Exception as e:
             logger.error(f"Error validating/refreshing Google Drive token for user {user_id}: {str(e)}")
             return None
-
-    def _create_example_course(self) -> ExternalAiCourseGenerateResponse:
-        """Create an example course for testing purposes"""
-        return ExternalAiCourseGenerateResponse(
-            learning_objectives=[
-                "Understand the fundamentals of Google Cloud Vertex AI.",
-                "Train an XGBoost model for a real-world problem.",
-                "Deploy an XGBoost model to a Vertex AI endpoint for online predictions.",
-                "Perform batch predictions using Vertex AI for offline use cases.",
-                "Integrate XGBoost with a complete MLOps workflow on GCP."
-            ],
-            description="Learn how to deploy machine learning models using XGBoost on Google Cloud Vertex AI.",
-            estimated_duration=10,
-            modules=[
-                Module(
-                    title="Module 1: Introduction to Vertex AI",
-                    lessons=[
-                        Lesson(
-                            title="Introduction to Vertex AI",
-                            content="This lesson introduces Google Cloud Vertex AI, a unified platform for machine learning development. We will explore the key components of Vertex AI, including notebooks, training, and model deployment.",
-                            index=1
-                        ),
-                        Lesson(
-                            title="Setting up your GCP Environment",
-                            content="Learn how to set up your Google Cloud Platform environment, create a project, enable necessary APIs, and configure authentication for Vertex AI development.",
-                            index=2
-                        ),
-                        Lesson(
-                            title="Understanding XGBoost",
-                            content="Dive deep into XGBoost, a powerful gradient boosting framework. Learn about its features, advantages, and how it compares to other machine learning algorithms.",
-                            index=3
-                        )
-                    ],
-                    index=1
-                ),
-                Module(
-                    title="Module 2: Data Preparation and Model Training",
-                    lessons=[
-                        Lesson(
-                            title="Data Loading and Preprocessing",
-                            content="Learn how to load and preprocess data for XGBoost training, including handling missing values, feature engineering, and data validation techniques.",
-                            index=1
-                        ),
-                        Lesson(
-                            title="Training XGBoost Models",
-                            content="Master the art of training XGBoost models, including hyperparameter tuning, cross-validation, and model evaluation techniques.",
-                            index=2
-                        ),
-                        Lesson(
-                            title="Model Validation and Testing",
-                            content="Understand how to properly validate and test your XGBoost models to ensure they perform well on unseen data.",
-                            index=3
-                        )
-                    ],
-                    index=2
-                ),
-                Module(
-                    title="Module 3: Deployment and Production",
-                    lessons=[
-                        Lesson(
-                            title="Deploying to Vertex AI Endpoints",
-                            content="Learn how to deploy your trained XGBoost model to Vertex AI endpoints for real-time predictions and serving.",
-                            index=1
-                        ),
-                        Lesson(
-                            title="Batch Predictions",
-                            content="Implement batch prediction workflows using Vertex AI for processing large datasets efficiently.",
-                            index=2
-                        ),
-                        Lesson(
-                            title="Monitoring and Maintenance",
-                            content="Set up monitoring, logging, and maintenance procedures for your deployed models in production.",
-                            index=3
-                        )
-                    ],
-                    index=3
-                )
-            ],
-            title="Machine Learning Deployment with XGBoost and Vertex AI",
-            source_from=[
-                "https://github.com",
-                "https://google.drive.com"
-            ],
-            difficulty="Advanced"
-        )
