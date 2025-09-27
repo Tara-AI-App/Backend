@@ -32,9 +32,9 @@ class Settings(BaseSettings):
     JWT_EXPIRATION_SECONDS: int = Field(default=2592000, description="JWT token expiration time in seconds (default: 1 month)")
     
     # GitHub OAuth settings
-    GITHUB_CLIENT_ID: str = Field(description="GitHub OAuth client ID")
-    GITHUB_CLIENT_SECRET: str = Field(description="GitHub OAuth client secret")
-    GITHUB_REDIRECT_URI: str = Field(description="GitHub OAuth redirect URI")
+    GH_CLIENT_ID: str = Field(description="GitHub OAuth client ID")
+    GH_CLIENT_SECRET: str = Field(description="GitHub OAuth client secret")
+    GH_REDIRECT_URI: str = Field(description="GitHub OAuth redirect URI")
     
     # Google Drive OAuth settings
     GOOGLE_CLIENT_ID: str = Field(description="Google OAuth client ID")

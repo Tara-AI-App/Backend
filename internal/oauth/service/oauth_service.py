@@ -26,7 +26,7 @@ class OAuthService:
         if not state:
             state = "default_state"
             
-        auth_url = f"https://github.com/login/oauth/authorize?client_id={settings.GITHUB_CLIENT_ID}&redirect_uri={settings.GITHUB_REDIRECT_URI}&scope=repo&state={state}"
+        auth_url = f"https://github.com/login/oauth/authorize?client_id={settings.GH_CLIENT_ID}&redirect_uri={settings.GH_REDIRECT_URI}&scope=repo&state={state}"
         return auth_url
 
     async def exchange_github_code_for_token(
@@ -39,10 +39,10 @@ class OAuthService:
             token_response = await client.post(
                 "https://github.com/login/oauth/access_token",
                 data={
-                    "client_id": settings.GITHUB_CLIENT_ID,
-                    "client_secret": settings.GITHUB_CLIENT_SECRET,
+                    "client_id": settings.GH_CLIENT_ID,
+                    "client_secret": settings.GH_CLIENT_SECRET,
                     "code": code,
-                    "redirect_uri": settings.GITHUB_REDIRECT_URI,
+                    "redirect_uri": settings.GH_REDIRECT_URI,
                 },
                 headers={"Accept": "application/json"}
             )

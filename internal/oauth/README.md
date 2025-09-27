@@ -22,9 +22,9 @@ Add the following environment variables to your `.env` file:
 
 ```env
 # GitHub OAuth Configuration
-GITHUB_CLIENT_ID=your_github_client_id
-GITHUB_CLIENT_SECRET=your_github_client_secret
-GITHUB_REDIRECT_URI=http://localhost:3000/oauth/github/callback
+GH_CLIENT_ID=your_github_client_id
+GH_CLIENT_SECRET=your_github_client_secret
+GH_REDIRECT_URI=http://localhost:3000/oauth/github/callback
 ```
 
 ## Usage Examples
