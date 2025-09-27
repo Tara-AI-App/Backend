@@ -134,6 +134,14 @@ jobs:
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
         run: |-
+          echo "=== STARTING CLOUD RUN DEPLOYMENT ==="
+          echo "Image: ${{ env.FULL_IMAGE_TAG_SHA }}"
+          echo "Service: ${{ env.CLOUD_RUN_SERVICE_NAME }}"
+          echo "Region: ${{ env.GCP_REGION }}"
+          echo "Service Account: ${GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN}"
+          echo ""
+          
+          # Deploy with proper environment variable handling
           gcloud run deploy ${{ env.CLOUD_RUN_SERVICE_NAME }} \
             --image "${{ env.FULL_IMAGE_TAG_SHA }}" \
             --region "${{ env.GCP_REGION }}" \
@@ -141,21 +149,38 @@ jobs:
             --port "9000" \
             --allow-unauthenticated \
             --ingress all \
-            --service-account="${{ env.GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN }}" \
+            --service-account="${GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN}" \
             --min-instances=0 \
             --max-instances=2 \
             --timeout=3600 \
             --cpu=2 \
             --memory=4Gi \
-            --set-env-vars="DATABASE_URL=${{ env.DATABASE_URL }}" \
-            --set-env-vars="SECRET_KEY=${{ env.SECRET_KEY }}" \
-            --set-env-vars="GH_CLIENT_ID=${{ env.GH_CLIENT_ID }}" \
-            --set-env-vars="GH_CLIENT_SECRET=${{ env.GH_CLIENT_SECRET }}" \
-            --set-env-vars="GH_REDIRECT_URI=${{ env.GH_REDIRECT_URI }}" \
-            --set-env-vars="GOOGLE_CLIENT_ID=${{ env.GOOGLE_CLIENT_ID }}" \
-            --set-env-vars="GOOGLE_CLIENT_SECRET=${{ env.GOOGLE_CLIENT_SECRET }}" \
-            --set-env-vars="GOOGLE_REDIRECT_URI=${{ env.GOOGLE_REDIRECT_URI }}"
+            --set-env-vars="DATABASE_URL=${DATABASE_URL}" \
+            --set-env-vars="SECRET_KEY=${SECRET_KEY}" \
+            --set-env-vars="GH_CLIENT_ID=${GH_CLIENT_ID}" \
+            --set-env-vars="GH_CLIENT_SECRET=${GH_CLIENT_SECRET}" \
+            --set-env-vars="GH_REDIRECT_URI=${GH_REDIRECT_URI}" \
+            --set-env-vars="GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}" \
+            --set-env-vars="GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}" \
+            --set-env-vars="GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}" \
+            --verbosity=info
+          
+          echo "=== DEPLOYMENT COMMAND COMPLETED ==="
 
+      - name: Debug - Verify Environment Variables in Cloud Run
+        if: always()
+        run: |-
+          echo "=== VERIFYING CLOUD RUN ENVIRONMENT VARIABLES ==="
+          echo "Checking if environment variables were set correctly in the deployed service:"
+          gcloud run services describe ${{ env.CLOUD_RUN_SERVICE_NAME }} \
+            --region=${{ env.GCP_REGION }} \
+            --format="value(spec.template.spec.template.spec.containers[0].env[].name)" | sort
+          echo ""
+          echo "Environment variables count:"
+          gcloud run services describe ${{ env.CLOUD_RUN_SERVICE_NAME }} \
+            --region=${{ env.GCP_REGION }} \
+            --format="value(spec.template.spec.template.spec.containers[0].env[].name)" | wc -l
+          echo "=================================="
 
       - name: Display Cloud Run Service URL
         if: always()
