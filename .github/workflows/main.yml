@@ -67,61 +67,6 @@ jobs:
           docker push "${{ env.FULL_IMAGE_TAG_SHA }}"
           docker push "${{ env.FULL_IMAGE_TAG_LATEST }}"
 
-      - name: Debug - Check GitHub Secrets Availability
-        run: |-
-          echo "=== DEBUGGING GITHUB SECRETS ==="
-          echo "Checking if secrets are available (showing only presence, not values):"
-          echo "DATABASE_URL: ${{ secrets.DATABASE_URL != '' && 'SET' || 'NOT SET' }}"
-          echo "SECRET_KEY: ${{ secrets.SECRET_KEY != '' && 'SET' || 'NOT SET' }}"
-          echo "GH_CLIENT_ID: ${{ secrets.GH_CLIENT_ID != '' && 'SET' || 'NOT SET' }}"
-          echo "GH_CLIENT_SECRET: ${{ secrets.GH_CLIENT_SECRET != '' && 'SET' || 'NOT SET' }}"
-          echo "GH_REDIRECT_URI: ${{ secrets.GH_REDIRECT_URI != '' && 'SET' || 'NOT SET' }}"
-          echo "GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID != '' && 'SET' || 'NOT SET' }}"
-          echo "GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET != '' && 'SET' || 'NOT SET' }}"
-          echo "GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI != '' && 'SET' || 'NOT SET' }}"
-          echo "GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN != '' && 'SET' || 'NOT SET' }}"
-          echo "=================================="
-
-      - name: Debug - Show Environment Variables Length (for validation)
-        run: |-
-          echo "=== DEBUGGING ENV VAR LENGTHS ==="
-          echo "DATABASE_URL length: ${#DATABASE_URL}"
-          echo "SECRET_KEY length: ${#SECRET_KEY}"
-          echo "GH_CLIENT_ID length: ${#GH_CLIENT_ID}"
-          echo "GH_CLIENT_SECRET length: ${#GH_CLIENT_SECRET}"
-          echo "GH_REDIRECT_URI length: ${#GH_REDIRECT_URI}"
-          echo "GOOGLE_CLIENT_ID length: ${#GOOGLE_CLIENT_ID}"
-          echo "GOOGLE_CLIENT_SECRET length: ${#GOOGLE_CLIENT_SECRET}"
-          echo "GOOGLE_REDIRECT_URI length: ${#GOOGLE_REDIRECT_URI}"
-          echo "GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN length: ${#GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN}"
-          echo "=================================="
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          GH_CLIENT_ID: ${{ secrets.GH_CLIENT_ID }}
-          GH_CLIENT_SECRET: ${{ secrets.GH_CLIENT_SECRET }}
-          GH_REDIRECT_URI: ${{ secrets.GH_REDIRECT_URI }}
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
-          GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN }}
-
-      - name: Debug - Test gcloud auth and permissions
-        run: |-
-          echo "=== DEBUGGING GCLOUD AUTH ==="
-          echo "Current gcloud account:"
-          gcloud auth list --filter=status:ACTIVE --format="table(account)"
-          echo ""
-          echo "Current project:"
-          gcloud config get-value project
-          echo ""
-          echo "Testing Cloud Run permissions:"
-          gcloud run services list --region=${{ env.GCP_REGION }} || echo "Failed to list Cloud Run services - check permissions"
-          echo ""
-          echo "Testing if service already exists:"
-          gcloud run services describe ${{ env.CLOUD_RUN_SERVICE_NAME }} --region=${{ env.GCP_REGION }} --format="value(metadata.name)" 2>/dev/null || echo "Service does not exist yet (this is normal for first deployment)"
-          echo "=================================="
-
       - name: Deploy to Google Cloud Run
         env:
           GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN }}
@@ -134,13 +79,6 @@ jobs:
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
         run: |-
-          echo "=== STARTING CLOUD RUN DEPLOYMENT ==="
-          echo "Image: ${{ env.FULL_IMAGE_TAG_SHA }}"
-          echo "Service: ${{ env.CLOUD_RUN_SERVICE_NAME }}"
-          echo "Region: ${{ env.GCP_REGION }}"
-          echo "Service Account: ${GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN}"
-          echo ""
-          
           # Create environment variables file to handle special characters
           cat > env_vars.yaml << 'EOF'
           DATABASE_URL: "${DATABASE_URL}"
@@ -156,10 +94,6 @@ jobs:
           # Substitute environment variables in the file
           envsubst < env_vars.yaml > env_vars_final.yaml
           
-          echo "Environment variables file contents:"
-          cat env_vars_final.yaml
-          echo ""
-          
           # Deploy with environment variables file
           gcloud run deploy ${{ env.CLOUD_RUN_SERVICE_NAME }} \
             --image "${{ env.FULL_IMAGE_TAG_SHA }}" \
@@ -174,28 +108,10 @@ jobs:
             --timeout=3600 \
             --cpu=2 \
             --memory=4Gi \
-            --env-vars-file=env_vars_final.yaml \
-            --verbosity=info
+            --env-vars-file=env_vars_final.yaml
           
           # Clean up temporary files
           rm -f env_vars.yaml env_vars_final.yaml
-          
-          echo "=== DEPLOYMENT COMMAND COMPLETED ==="
-
-      - name: Debug - Verify Environment Variables in Cloud Run
-        if: always()
-        run: |-
-          echo "=== VERIFYING CLOUD RUN ENVIRONMENT VARIABLES ==="
-          echo "Checking if environment variables were set correctly in the deployed service:"
-          gcloud run services describe ${{ env.CLOUD_RUN_SERVICE_NAME }} \
-            --region=${{ env.GCP_REGION }} \
-            --format="value(spec.template.spec.template.spec.containers[0].env[].name)" | sort
-          echo ""
-          echo "Environment variables count:"
-          gcloud run services describe ${{ env.CLOUD_RUN_SERVICE_NAME }} \
-            --region=${{ env.GCP_REGION }} \
-            --format="value(spec.template.spec.template.spec.containers[0].env[].name)" | wc -l
-          echo "=================================="
 
       - name: Display Cloud Run Service URL
         if: always()
