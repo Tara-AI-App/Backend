@@ -1,0 +1,106 @@
+name: Deploy FastAPI to Google Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  GCP_PROJECT_ID: "id-rd-ca-qais-jabbar"
+  GCP_REGION: "us-central1"
+  CLOUD_RUN_SERVICE_NAME: "tara-backend"
+  ARTIFACT_REGISTRY_REGION: "us-central1"
+  ARTIFACT_REGISTRY_REPOSITORY: "tara-backend-repo"
+
+jobs:
+  deploy:
+    name: Build and Deploy to Cloud Run
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Define derived environment variables
+        id: set_derived_vars
+        run: |
+          # Construct GAR_HOSTNAME (Artifact Registry Hostname)
+          echo "GAR_HOSTNAME=${{ env.ARTIFACT_REGISTRY_REGION }}-docker.pkg.dev" >> $GITHUB_ENV
+          
+          # Define IMAGE_NAME (conceptual name for the image, often same as service)
+          # This is used as the last part of the image path before the tag.
+          echo "IMAGE_NAME=${{ env.CLOUD_RUN_SERVICE_NAME }}" >> $GITHUB_ENV
+          
+          # Construct full image paths using the base env vars
+          echo "FULL_IMAGE_TAG_SHA=${{ env.ARTIFACT_REGISTRY_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPOSITORY }}/${{ env.CLOUD_RUN_SERVICE_NAME }}:${{ github.sha }}" >> $GITHUB_ENV
+          echo "FULL_IMAGE_TAG_LATEST=${{ env.ARTIFACT_REGISTRY_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPOSITORY }}/${{ env.CLOUD_RUN_SERVICE_NAME }}:latest" >> $GITHUB_ENV
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Configure Docker for Artifact Registry
+        run: |-
+          gcloud auth configure-docker ${{ env.GAR_HOSTNAME }} --quiet
+
+      - name: Build Docker image
+        run: |-
+          docker build \
+            --tag "${{ env.FULL_IMAGE_TAG_SHA }}" \
+            --tag "${{ env.FULL_IMAGE_TAG_LATEST }}" \
+            .
+        working-directory: ./
+
+      - name: Push Docker image to Artifact Registry
+        run: |-
+          docker push "${{ env.FULL_IMAGE_TAG_SHA }}"
+          docker push "${{ env.FULL_IMAGE_TAG_LATEST }}"
+
+      - name: Deploy to Google Cloud Run
+        run: |-
+          gcloud run deploy ${{ env.CLOUD_RUN_SERVICE_NAME }} \
+            --image "${{ env.FULL_IMAGE_TAG_SHA }}" \
+            --region "${{ env.GCP_REGION }}" \
+            --platform "managed" \
+            --port "9000" \
+            --allow-unauthenticated \
+            # --ingress internal \
+            --ingress all \
+            # --vpc-egress=private-ranges-only \
+            # --network=vpc-tara \
+            --subnet=subnet-us \
+            --service-account="${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN }}" \
+            --min-instances=0 \
+            --max-instances=2 \
+            --timeout=3600 \
+            --cpu=2 \
+            --memory=4Gi \
+            --set-env-vars="GCP_WORKLOAD_IDENTITY_PROVIDER=${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}" \
+            --set-env-vars="GCP_SERVICE_ACCOUNT_EMAIL=${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}" \
+            --set-env-vars="GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN=${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN }}" \
+            --set-env-vars="DATABASE_URL=${{ secrets.DATABASE_URL }}" \
+            --set-env-vars="SECRET_KEY=${{ secrets.SECRET_KEY }}" \
+            --set-env-vars="GH_CLIENT_ID=${{ secrets.GH_CLIENT_ID }}" \
+            --set-env-vars="GH_CLIENT_SECRET=${{ secrets.GH_CLIENT_SECRET }}" \
+            --set-env-vars="GH_REDIRECT_URI=${{ secrets.GH_REDIRECT_URI }}" \
+            --set-env-vars="GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" \
+            --set-env-vars="GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" \
+            --set-env-vars="GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}"
+
+
+      - name: Display Cloud Run Service URL
+        if: always()
+        run: |-
+          SERVICE_URL=$(gcloud run services describe ${{ env.CLOUD_RUN_SERVICE_NAME }} --platform managed --region ${{ env.GCP_REGION }} --format 'value(status.url)')
+          echo "Cloud Run Service URL: ${SERVICE_URL}"
