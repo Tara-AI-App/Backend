@@ -68,18 +68,30 @@ jobs:
           docker push "${{ env.FULL_IMAGE_TAG_LATEST }}"
 
       - name: Deploy to Google Cloud Run
+        env:
+          GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          GCP_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}
+          GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          GH_CLIENT_ID: ${{ secrets.GH_CLIENT_ID }}
+          GH_CLIENT_SECRET: ${{ secrets.GH_CLIENT_SECRET }}
+          GH_REDIRECT_URI: ${{ secrets.GH_REDIRECT_URI }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
         run: |
-          ENV_VARS="GCP_WORKLOAD_IDENTITY_PROVIDER=${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}"
-          ENV_VARS="${ENV_VARS},GCP_SERVICE_ACCOUNT_EMAIL=${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}"
-          ENV_VARS="${ENV_VARS},GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN=${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN }}"
-          ENV_VARS="${ENV_VARS},DATABASE_URL=${{ secrets.DATABASE_URL }}"
-          ENV_VARS="${ENV_VARS},SECRET_KEY=${{ secrets.SECRET_KEY }}"
-          ENV_VARS="${ENV_VARS},GH_CLIENT_ID=${{ secrets.GH_CLIENT_ID }}"
-          ENV_VARS="${ENV_VARS},GH_CLIENT_SECRET=${{ secrets.GH_CLIENT_SECRET }}"
-          ENV_VARS="${ENV_VARS},GH_REDIRECT_URI=${{ secrets.GH_REDIRECT_URI }}"
-          ENV_VARS="${ENV_VARS},GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}"
-          ENV_VARS="${ENV_VARS},GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}"
-          ENV_VARS="${ENV_VARS},GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}"
+          ENV_VARS="GCP_WORKLOAD_IDENTITY_PROVIDER=${GCP_WORKLOAD_IDENTITY_PROVIDER}"
+          ENV_VARS="${ENV_VARS},GCP_SERVICE_ACCOUNT_EMAIL=${GCP_SERVICE_ACCOUNT_EMAIL}"
+          ENV_VARS="${ENV_VARS},GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN=${GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN}"
+          ENV_VARS="${ENV_VARS},DATABASE_URL=${DATABASE_URL}"
+          ENV_VARS="${ENV_VARS},SECRET_KEY=${SECRET_KEY}"
+          ENV_VARS="${ENV_VARS},GH_CLIENT_ID=${GH_CLIENT_ID}"
+          ENV_VARS="${ENV_VARS},GH_CLIENT_SECRET=${GH_CLIENT_SECRET}"
+          ENV_VARS="${ENV_VARS},GH_REDIRECT_URI=${GH_REDIRECT_URI}"
+          ENV_VARS="${ENV_VARS},GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}"
+          ENV_VARS="${ENV_VARS},GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}"
+          ENV_VARS="${ENV_VARS},GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}"
           
           gcloud run deploy ${{ env.CLOUD_RUN_SERVICE_NAME }} \
             --image "${{ env.FULL_IMAGE_TAG_SHA }}" \
@@ -88,7 +100,7 @@ jobs:
             --port "9000" \
             --allow-unauthenticated \
             --ingress all \
-            --service-account="${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN }}" \
+            --service-account="${GCP_SERVICE_ACCOUNT_EMAIL_CLOUDRUN}" \
             --min-instances=0 \
             --max-instances=2 \
             --timeout=3600 \
