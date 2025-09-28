@@ -9,3 +9,4 @@ class AiCourseRepository(ABC):
     async def save_course(self, user_id: UUID, external_response: ExternalAiCourseGenerateResponse) -> AiCourseGenerateResponse:
         """Save a generated course to the database"""
         pass
+

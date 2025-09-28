@@ -7,7 +7,8 @@ from internal.ai.course.model.course_dto import (
     AiCourseGenerateResponse, 
     ExternalAiCourseGenerateResponse,
     Module,
-    Lesson
+    Lesson,
+    CourseListResponse
 )
 from internal.oauth.service.oauth_service import OAuthService
 from internal.ai.course.repository.ai_course_repository import AiCourseRepository
@@ -116,3 +117,12 @@ class AiCourseService:
         except Exception as e:
             logger.error(f"Error validating/refreshing Google Drive token for user {user_id}: {str(e)}")
             return None
+
+    async def get_courses(self, user_id: UUID) -> CourseListResponse:
+        """Get all courses for a user"""
+        try:
+            logger.info(f"Getting courses for user {user_id}")
+            return await self.course_repository.get_courses_by_user(user_id)
+        except Exception as e:
+            logger.error(f"Error getting courses for user {user_id}: {str(e)}")
+            raise e

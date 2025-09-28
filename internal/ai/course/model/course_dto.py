@@ -42,4 +42,25 @@ class AiCourseGenerateResponse:
 
     course_id: UUID
     external_response: Optional[ExternalAiCourseGenerateResponse] = None
+
+@dataclass
+class CourseListItem:
+    """Course list item model"""
+    id: UUID
+    title: str
+    description: Optional[str]
+    estimated_duration: Optional[int]
+    difficulty: Optional[str]
+    learning_objectives: Optional[List[str]]
+    source_from: Optional[List[str]]
+    progress: float
+    is_completed: bool
+    created_at: str
+    updated_at: str
+
+@dataclass
+class CourseListResponse:
+    """Response model for course list"""
+    courses: List[CourseListItem]
+    total: int
     

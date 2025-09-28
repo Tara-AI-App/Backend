@@ -1,9 +1,12 @@
+import logging
 from typing import Optional
 from uuid import UUID, uuid4
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from internal.ai.course.repository.ai_course_repository import AiCourseRepository
 from internal.ai.course.model.course_dto import AiCourseGenerateResponse, ExternalAiCourseGenerateResponse
+
+logger = logging.getLogger(__name__)
 
 class DatabaseAiCourseRepository(AiCourseRepository):
     """Database repository for AI course operations using raw SQL queries"""
@@ -100,3 +103,4 @@ class DatabaseAiCourseRepository(AiCourseRepository):
                 "index": lesson_data.index,  # Use index from input data
                 "is_completed": False
             })
+

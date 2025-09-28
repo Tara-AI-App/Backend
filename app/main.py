@@ -1,14 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
-# from internal.domain.handler.item_handler import router as item_router
 from internal.user.handler.user_handler import router as user_router
 from internal.oauth.handler.oauth_handler import router as oauth_router
-from internal.ai.course.handler.course_handler import router as course_router
-# from internal.domain.handler.lms_handler import (
-#     department_router, position_router, location_router,
-#     user_router, course_router, module_router
-# )
+from internal.ai.course.handler.course_handler import router as ai_course_router
+from internal.course.handler.course_handler import router as course_router
 from internal.auth.middleware import JWTMiddleware
 from app.config import settings
 from app.database.connection import SessionLocal
@@ -53,18 +49,10 @@ def create_app() -> FastAPI:
     app.middleware("http")(JWTMiddleware())
 
     # Include routers
-    # app.include_router(item_router, prefix=settings.API_V1_STR)
     app.include_router(user_router, prefix=settings.API_V1_STR)
     app.include_router(oauth_router, prefix=settings.API_V1_STR)
+    app.include_router(ai_course_router, prefix=settings.API_V1_STR)
     app.include_router(course_router, prefix=settings.API_V1_STR)
-    
-    # Include LMS routers (commented out until handlers are implemented)
-    # app.include_router(department_router, prefix=settings.API_V1_STR)
-    # app.include_router(position_router, prefix=settings.API_V1_STR)
-    # app.include_router(location_router, prefix=settings.API_V1_STR)
-    # app.include_router(user_router, prefix=settings.API_V1_STR)
-    # app.include_router(course_router, prefix=settings.API_V1_STR)
-    # app.include_router(module_router, prefix=settings.API_V1_STR)
 
     @app.get("/")
     async def read_root():
