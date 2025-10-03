@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
+import logging
 from internal.user.handler.user_handler import router as user_router
 from internal.oauth.handler.oauth_handler import router as oauth_router
 from internal.ai.course.handler.course_handler import router as ai_course_router
@@ -8,6 +9,16 @@ from internal.course.handler.course_handler import router as course_router
 from internal.auth.middleware import JWTMiddleware
 from app.config import settings
 from app.database.connection import SessionLocal
+
+# Configure logging
+logging.basicConfig(
+    level=getattr(logging, settings.LOG_LEVEL.upper()),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+
+# Create logger for this module
+logger = logging.getLogger(__name__)
 
 def create_app() -> FastAPI:
     """Create and configure FastAPI application"""
@@ -74,14 +85,15 @@ def create_app() -> FastAPI:
     @app.on_event("startup")
     async def startup_event():
         """Test database connection on startup"""
+        logger.info("🚀 Starting Tara API application...")
         try:
             # Test database connection
             db = SessionLocal()
             db.execute(text("SELECT 1"))
             db.close()
-            print("✅ Database connection successful")
+            logger.info("✅ Database connection successful")
         except Exception as e:
-            print(f"❌ Database connection failed: {e}")
+            logger.error(f"❌ Database connection failed: {e}")
             raise e
 
     return app

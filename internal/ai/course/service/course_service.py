@@ -8,6 +8,7 @@ from internal.ai.course.model.course_dto import (
     ExternalAiCourseGenerateResponse,
     Module,
     Lesson,
+    QuizQuestion,
     CourseListResponse
 )
 from internal.oauth.service.oauth_service import OAuthService
@@ -67,7 +68,7 @@ class AiCourseService:
         }
         
         logger.info(f"Calling external AI API at {url} with timeout {settings.AI_API_TIMEOUT}s")
-        logger.info(f"Request payload: prompt length={len(course_data.prompt)}, files_url={'present' if course_data.files_url else 'none'}")
+        logger.info(f"Request payload: {payload}")
         
         try:
             async with httpx.AsyncClient(timeout=settings.AI_API_TIMEOUT) as client:
@@ -98,10 +99,22 @@ class AiCourseService:
                 )
                 lessons.append(lesson)
             
+            # Parse quiz data if present
+            quiz_questions = []
+            if "quiz" in module_data and module_data["quiz"]:
+                for quiz_data in module_data["quiz"]:
+                    quiz_question = QuizQuestion(
+                        question=quiz_data["question"],
+                        choices=quiz_data["choices"],
+                        answer=quiz_data["answer"]
+                    )
+                    quiz_questions.append(quiz_question)
+            
             module = Module(
                 title=module_data["title"],
                 lessons=lessons,
-                index=module_data["index"]
+                index=module_data["index"],
+                quiz=quiz_questions if quiz_questions else None
             )
             modules.append(module)
         
@@ -112,7 +125,8 @@ class AiCourseService:
             modules=modules,
             title=data["title"],
             source_from=data["source_from"],
-            difficulty=data["difficulty"]
+            difficulty=data["difficulty"],
+            skills=data.get("skills")
         )
 
     async def _validate_and_refresh_drive_token(self, user_id: UUID) -> Optional[str]:

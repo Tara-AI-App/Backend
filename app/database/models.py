@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Float, DateTime, Boolean, ForeignKey, ARRAY
+from sqlalchemy import Column, Integer, String, Text, Float, DateTime, Boolean, ForeignKey, ARRAY, JSON
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -53,6 +53,7 @@ class UserModel(Base):
     name = Column(String(255), nullable=False)
     image = Column(String(500), nullable=True)
     email = Column(String(255), nullable=False, unique=True, index=True)
+    password = Column(String(255), nullable=True)  # Added password column
     country = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
@@ -101,6 +102,7 @@ class ModuleModel(Base):
     # Relationships
     course = relationship("CourseModel", back_populates="modules")
     lessons = relationship("LessonModel", back_populates="module", cascade="all, delete-orphan")
+    quizzes = relationship("QuizModel", back_populates="module", cascade="all, delete-orphan")
 
 class LessonModel(Base):
     """Lesson model for course lessons"""
@@ -133,3 +135,18 @@ class OAuthTokenModel(Base):
     
     # Relationships
     user = relationship("UserModel", back_populates="oauth_tokens")
+
+class QuizModel(Base):
+    """Quiz model for course quizzes"""
+    __tablename__ = "quizzes"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    module_id = Column(UUID(as_uuid=True), ForeignKey("modules.id"), nullable=False)
+    questions = Column(JSON, nullable=False)  # JSON array of quiz questions
+    is_completed = Column(Boolean, default=False, nullable=False)
+    is_correct = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
+    # Relationships
+    module = relationship("ModuleModel", back_populates="quizzes")

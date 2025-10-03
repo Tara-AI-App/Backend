@@ -43,7 +43,10 @@ class Settings(BaseSettings):
     
     # External AI API settings
     AI_API_BASE_URL: str = Field(default="https://agent.taraai.tech", description="Base URL for external AI API")
-    AI_API_TIMEOUT: int = Field(default=120, description="Timeout for AI API requests in seconds")
+    AI_API_TIMEOUT: int = Field(default=3600, description="Timeout for AI API requests in seconds")
+    
+    # Logging settings
+    LOG_LEVEL: str = Field(default="INFO", description="Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)")
     
     class Config:
         env_file = ".env"

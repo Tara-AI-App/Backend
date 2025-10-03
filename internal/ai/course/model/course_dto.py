@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from uuid import UUID
 
 @dataclass
@@ -10,6 +10,13 @@ class AiCourseGenerateRequest:
     token_drive: str
     prompt: str
     files_url: Optional[str] = None
+
+@dataclass
+class QuizQuestion:
+    """Quiz question model"""
+    question: str
+    choices: Dict[str, str]
+    answer: str
 
 @dataclass
 class Lesson:
@@ -24,6 +31,7 @@ class Module:
     title: str
     lessons: List[Lesson]
     index: int
+    quiz: Optional[List[QuizQuestion]] = None
 
 @dataclass
 class ExternalAiCourseGenerateResponse:
@@ -35,6 +43,7 @@ class ExternalAiCourseGenerateResponse:
     title: str
     source_from: List[str]
     difficulty: str
+    skills: Optional[List[str]] = None
 
 @dataclass
 class AiCourseGenerateResponse:
