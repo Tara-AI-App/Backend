@@ -66,40 +66,54 @@ class AiCourseService:
             "Content-Type": "application/json"
         }
         
-        async with httpx.AsyncClient(timeout=settings.AI_API_TIMEOUT) as client:
-            response = await client.post(url, json=payload, headers=headers)
-            response.raise_for_status()
-            
-            data = response.json()
-            
-            # Parse modules and lessons
-            modules = []
-            for module_data in data.get("modules", []):
-                lessons = []
-                for lesson_data in module_data.get("lessons", []):
-                    lesson = Lesson(
-                        title=lesson_data["title"],
-                        content=lesson_data["content"],
-                        index=lesson_data["index"]
-                    )
-                    lessons.append(lesson)
+        logger.info(f"Calling external AI API at {url} with timeout {settings.AI_API_TIMEOUT}s")
+        logger.info(f"Request payload: prompt length={len(course_data.prompt)}, files_url={'present' if course_data.files_url else 'none'}")
+        
+        try:
+            async with httpx.AsyncClient(timeout=settings.AI_API_TIMEOUT) as client:
+                response = await client.post(url, json=payload, headers=headers)
+                response.raise_for_status()
                 
-                module = Module(
-                    title=module_data["title"],
-                    lessons=lessons,
-                    index=module_data["index"]
+                data = response.json()
+                logger.info(f"External AI API responded successfully with {len(data.get('modules', []))} modules")
+        except httpx.TimeoutException:
+            logger.error(f"External AI API request timed out after {settings.AI_API_TIMEOUT}s")
+            raise TimeoutError(f"AI service request timed out after {settings.AI_API_TIMEOUT} seconds. Please try again.")
+        except httpx.HTTPStatusError as e:
+            logger.error(f"External AI API returned HTTP {e.response.status_code}: {e.response.text}")
+            raise ConnectionError(f"AI service returned error {e.response.status_code}: {e.response.text}")
+        except Exception as e:
+            logger.error(f"Unexpected error calling external AI API: {str(e)}")
+            raise RuntimeError(f"Failed to connect to AI service: {str(e)}")
+        
+        # Parse modules and lessons
+        modules = []
+        for module_data in data.get("modules", []):
+            lessons = []
+            for lesson_data in module_data.get("lessons", []):
+                lesson = Lesson(
+                    title=lesson_data["title"],
+                    content=lesson_data["content"],
+                    index=lesson_data["index"]
                 )
-                modules.append(module)
+                lessons.append(lesson)
             
-            return ExternalAiCourseGenerateResponse(
-                learning_objectives=data["learning_objectives"],
-                description=data["description"],
-                estimated_duration=data["estimated_duration"],
-                modules=modules,
-                title=data["title"],
-                source_from=data["source_from"],
-                difficulty=data["difficulty"]
+            module = Module(
+                title=module_data["title"],
+                lessons=lessons,
+                index=module_data["index"]
             )
+            modules.append(module)
+        
+        return ExternalAiCourseGenerateResponse(
+            learning_objectives=data["learning_objectives"],
+            description=data["description"],
+            estimated_duration=data["estimated_duration"],
+            modules=modules,
+            title=data["title"],
+            source_from=data["source_from"],
+            difficulty=data["difficulty"]
+        )
 
     async def _validate_and_refresh_drive_token(self, user_id: UUID) -> Optional[str]:
         """Validate and refresh Google Drive token if needed"""
