@@ -1,7 +1,7 @@
 import logging
 from uuid import UUID
 from typing import Optional
-from internal.course.model.course_dto import CourseListResponse, CourseDetail, LessonCompletionResponse
+from internal.course.model.course_dto import CourseListResponse, CourseDetail, LessonCompletionResponse, QuizCompletionResponse
 from internal.course.repository.course_repository import CourseRepository
 
 logger = logging.getLogger(__name__)
@@ -37,6 +37,15 @@ class CourseService:
             return await self.course_repository.update_lesson_completion(lesson_id, user_id, is_completed)
         except Exception as e:
             logger.error(f"Error updating lesson {lesson_id} completion for user {user_id}: {str(e)}")
+            raise e
+
+    async def update_quiz_completion(self, quiz_id: UUID, user_id: UUID, is_completed: bool) -> QuizCompletionResponse:
+        """Update quiz completion status"""
+        try:
+            logger.info(f"Updating quiz {quiz_id} completion status to {is_completed} for user {user_id}")
+            return await self.course_repository.update_quiz_completion(quiz_id, user_id, is_completed)
+        except Exception as e:
+            logger.error(f"Error updating quiz {quiz_id} completion for user {user_id}: {str(e)}")
             raise e
 
     async def calculate_course_progress(self, course_id: UUID, user_id: UUID) -> float:

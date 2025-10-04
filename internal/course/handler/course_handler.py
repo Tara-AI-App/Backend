@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from uuid import UUID
 from app.database.connection import get_db
-from internal.course.model.course_dto import CourseListResponse, CourseDetail, LessonCompletionRequest, LessonCompletionResponse
+from internal.course.model.course_dto import CourseListResponse, CourseDetail, LessonCompletionRequest, LessonCompletionResponse, QuizCompletionRequest, QuizCompletionResponse
 from internal.course.service.course_service import CourseService
 from internal.course.repository.course_repository_db import DatabaseCourseRepository
 from internal.auth.middleware import get_current_user_id
@@ -87,4 +87,28 @@ async def update_lesson_completion(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update lesson completion: {str(e)}"
+        )
+
+@router.patch("/quiz/{quiz_id}/complete", response_model=QuizCompletionResponse)
+async def update_quiz_completion(
+    quiz_id: UUID,
+    request: QuizCompletionRequest,
+    course_service: CourseService = Depends(get_course_service),
+    current_user_id: str = Depends(get_current_user_id)
+):
+    """Mark a quiz as completed or incomplete"""
+    try:
+        user_id = UUID(current_user_id)
+        return await course_service.update_quiz_completion(quiz_id, user_id, request.is_completed)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update quiz completion: {str(e)}"
         )

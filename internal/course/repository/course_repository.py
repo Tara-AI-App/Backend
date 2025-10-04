@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 from typing import List, Optional
-from internal.course.model.course_dto import CourseListResponse, CourseDetail, LessonCompletionResponse
+from internal.course.model.course_dto import CourseListResponse, CourseDetail, LessonCompletionResponse, QuizCompletionResponse
 
 class CourseRepository(ABC):
     """Abstract repository for course operations"""
@@ -19,6 +19,11 @@ class CourseRepository(ABC):
     @abstractmethod
     async def update_lesson_completion(self, lesson_id: UUID, user_id: UUID, is_completed: bool) -> LessonCompletionResponse:
         """Update lesson completion status"""
+        pass
+
+    @abstractmethod
+    async def update_quiz_completion(self, quiz_id: UUID, user_id: UUID, is_completed: bool) -> QuizCompletionResponse:
+        """Update quiz completion status"""
         pass
 
     @abstractmethod

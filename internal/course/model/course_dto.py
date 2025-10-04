@@ -84,3 +84,16 @@ class LessonCompletionResponse:
     message: str
     lesson_id: UUID
     is_completed: bool
+
+@dataclass
+class QuizCompletionRequest:
+    """Request model for marking quiz as completed"""
+    is_completed: bool = True
+
+@dataclass
+class QuizCompletionResponse:
+    """Response model for quiz completion update"""
+    success: bool
+    message: str
+    quiz_id: UUID
+    is_completed: bool

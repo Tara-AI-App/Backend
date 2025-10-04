@@ -4,7 +4,7 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from internal.course.repository.course_repository import CourseRepository
-from internal.course.model.course_dto import CourseListResponse, CourseListItem, CourseDetail, ModuleDetail, LessonDetail, QuizDetail, LessonCompletionResponse
+from internal.course.model.course_dto import CourseListResponse, CourseListItem, CourseDetail, ModuleDetail, LessonDetail, QuizDetail, LessonCompletionResponse, QuizCompletionResponse
 
 logger = logging.getLogger(__name__)
 
@@ -253,6 +253,74 @@ class DatabaseCourseRepository(CourseRepository):
             self.db.rollback()
             raise e
 
+    async def update_quiz_completion(self, quiz_id: UUID, user_id: UUID, is_completed: bool) -> QuizCompletionResponse:
+        """Update quiz completion status for a specific quiz"""
+        try:
+            # First verify that the quiz exists and belongs to a course owned by the user
+            verify_query = text("""
+                SELECT q.id, q.is_completed, c.id as course_id, c.user_id
+                FROM quizzes q
+                JOIN modules m ON q.module_id = m.id
+                JOIN courses c ON m.course_id = c.id
+                WHERE q.id = :quiz_id AND c.user_id = :user_id
+            """)
+            
+            result = self.db.execute(verify_query, {"quiz_id": quiz_id, "user_id": user_id})
+            quiz_data = result.fetchone()
+            
+            if not quiz_data:
+                return QuizCompletionResponse(
+                    success=False,
+                    message="Quiz not found or access denied",
+                    quiz_id=quiz_id,
+                    is_completed=False
+                )
+            
+            # Get the course_id for progress calculation
+            course_id = quiz_data.course_id
+            
+            # Update the quiz completion status
+            update_query = text("""
+                UPDATE quizzes 
+                SET is_completed = :is_completed, 
+                    updated_at = NOW()
+                WHERE id = :quiz_id
+            """)
+            
+            self.db.execute(update_query, {
+                "quiz_id": quiz_id,
+                "is_completed": is_completed
+            })
+            
+            # First check and update module completion status based on lessons and quizzes
+            await self.check_and_update_module_completion(course_id, user_id)
+            
+            # Calculate course progress after potential module updates
+            calculated_progress = await self.calculate_course_progress(course_id, user_id)
+            
+            # Update course progress (this will commit both quiz and progress updates)
+            progress_updated = await self.update_course_progress(course_id, user_id, calculated_progress)
+            
+            if not progress_updated:
+                # If progress update failed but quiz update succeeded, we still committed quiz update
+                logger.warning(f"Quiz {quiz_id} updated but course progress update failed")
+            
+            logger.info(f"Updated quiz {quiz_id} completion status to {is_completed} for user {user_id}. "
+                       f"Modules auto-checked for completion. Course progress updated to {calculated_progress:.2f}%")
+            
+            return QuizCompletionResponse(
+                success=True,
+                message=f"Quiz {'marked as completed' if is_completed else 'marked as incomplete'}. "
+                       f"Course progress: {calculated_progress:.1f}%",
+                quiz_id=quiz_id,
+                is_completed=is_completed
+            )
+            
+        except Exception as e:
+            logger.error(f"Error updating quiz {quiz_id} completion for user {user_id}: {str(e)}")
+            self.db.rollback()
+            raise e
+
     async def calculate_course_progress(self, course_id: UUID, user_id: UUID) -> float:
         """Calculate course progress based on completed lessons, modules, and quizzes"""
         try:
@@ -264,7 +332,7 @@ class DatabaseCourseRepository(CourseRepository):
                     COUNT(DISTINCT l.id) as total_lessons,
                     COUNT(DISTINCT CASE WHEN l.is_completed = true THEN l.id END) as completed_lessons,
                     COUNT(DISTINCT q.id) as total_quizzes,
-                    COUNT(DISTINCT CASE WHEN q.is_completed = true AND q.is_correct = true THEN q.id END) as completed_quizzes
+                    COUNT(DISTINCT CASE WHEN q.is_completed = true THEN q.id END) as completed_quizzes
                 FROM courses c
                 JOIN modules m ON c.id = m.course_id
                 LEFT JOIN lessons l ON m.id = l.module_id
@@ -377,7 +445,7 @@ class DatabaseCourseRepository(CourseRepository):
                     COUNT(DISTINCT l.id) as total_lessons,
                     COUNT(DISTINCT CASE WHEN l.is_completed = true THEN l.id END) as completed_lessons,
                     COUNT(DISTINCT q.id) as total_quizzes,
-                    COUNT(DISTINCT CASE WHEN q.is_completed = true AND q.is_correct = true THEN q.id END) as completed_quizzes
+                    COUNT(DISTINCT CASE WHEN q.is_completed = true THEN q.id END) as completed_quizzes
                 FROM modules m
                 LEFT JOIN lessons l ON m.id = l.module_id
                 LEFT JOIN quizzes q ON m.id = q.module_id
