@@ -71,3 +71,16 @@ class CourseListResponse:
     """Response model for course list"""
     courses: List[CourseListItem]
     total: int
+
+@dataclass
+class LessonCompletionRequest:
+    """Request model for marking lesson as completed"""
+    is_completed: bool = True
+
+@dataclass
+class LessonCompletionResponse:
+    """Response model for lesson completion update"""
+    success: bool
+    message: str
+    lesson_id: UUID
+    is_completed: bool

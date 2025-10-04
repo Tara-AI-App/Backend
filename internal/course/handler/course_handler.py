@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from uuid import UUID
 from app.database.connection import get_db
-from internal.course.model.course_dto import CourseListResponse, CourseDetail
+from internal.course.model.course_dto import CourseListResponse, CourseDetail, LessonCompletionRequest, LessonCompletionResponse
 from internal.course.service.course_service import CourseService
 from internal.course.repository.course_repository_db import DatabaseCourseRepository
 from internal.auth.middleware import get_current_user_id
@@ -63,4 +63,28 @@ async def get_course_by_id(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get course: {str(e)}"
+        )
+
+@router.patch("/lesson/{lesson_id}/complete", response_model=LessonCompletionResponse)
+async def update_lesson_completion(
+    lesson_id: UUID,
+    request: LessonCompletionRequest,
+    course_service: CourseService = Depends(get_course_service),
+    current_user_id: str = Depends(get_current_user_id)
+):
+    """Mark a lesson as completed or incomplete"""
+    try:
+        user_id = UUID(current_user_id)
+        return await course_service.update_lesson_completion(lesson_id, user_id, request.is_completed)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update lesson completion: {str(e)}"
         )
