@@ -4,7 +4,7 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from internal.course.repository.course_repository import CourseRepository
-from internal.course.model.course_dto import CourseListResponse, CourseListItem, CourseDetail, ModuleDetail, LessonDetail
+from internal.course.model.course_dto import CourseListResponse, CourseListItem, CourseDetail, ModuleDetail, LessonDetail, QuizDetail
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ class DatabaseCourseRepository(CourseRepository):
     async def get_course_by_id(self, course_id: UUID, user_id: UUID) -> Optional[CourseDetail]:
         """Get a course by ID for a specific user with modules and lessons using JOIN query"""
         try:
-            # Single JOIN query to get course, modules, and lessons in one go
+            # Single JOIN query to get course, modules, lessons, and quizzes in one go
             join_query = text("""
                 SELECT 
                     c.id as course_id,
@@ -86,10 +86,17 @@ class DatabaseCourseRepository(CourseRepository):
                     l.index as lesson_index,
                     l.is_completed as lesson_is_completed,
                     l.created_at as lesson_created_at,
-                    l.updated_at as lesson_updated_at
+                    l.updated_at as lesson_updated_at,
+                    q.id as quiz_id,
+                    q.questions as quiz_questions,
+                    q.is_completed as quiz_is_completed,
+                    q.is_correct as quiz_is_correct,
+                    q.created_at as quiz_created_at,
+                    q.updated_at as quiz_updated_at
                 FROM courses c
                 LEFT JOIN modules m ON c.id = m.course_id
                 LEFT JOIN lessons l ON m.id = l.module_id
+                LEFT JOIN quizzes q ON m.id = q.module_id
                 WHERE c.id = :course_id AND c.user_id = :user_id
                 ORDER BY m.order_index ASC, l.index ASC
             """)
@@ -117,9 +124,10 @@ class DatabaseCourseRepository(CourseRepository):
                 modules=[]
             )
             
-            # Group data by modules and lessons
+            # Group data by modules, lessons, and quizzes
             modules_dict = {}
             lessons_dict = {}
+            quizzes_dict = {}
             
             for row in rows:
                 # Process module if it exists and not already processed
@@ -131,7 +139,8 @@ class DatabaseCourseRepository(CourseRepository):
                         is_completed=row.module_is_completed,
                         created_at=row.module_created_at.isoformat() if row.module_created_at else "",
                         updated_at=row.module_updated_at.isoformat() if row.module_updated_at else "",
-                        lessons=[]
+                        lessons=[],
+                        quizzes=[]
                     )
                 
                 # Process lesson if it exists and not already processed
@@ -150,6 +159,22 @@ class DatabaseCourseRepository(CourseRepository):
                     # Add lesson to its module
                     if row.module_id and row.module_id in modules_dict:
                         modules_dict[row.module_id].lessons.append(lesson_detail)
+                
+                # Process quiz if it exists and not already processed
+                if row.quiz_id and row.quiz_id not in quizzes_dict:
+                    quiz_detail = QuizDetail(
+                        id=row.quiz_id,
+                        questions=row.quiz_questions if row.quiz_questions else [],
+                        is_completed=row.quiz_is_completed,
+                        is_correct=row.quiz_is_correct,
+                        created_at=row.quiz_created_at.isoformat() if row.quiz_created_at else "",
+                        updated_at=row.quiz_updated_at.isoformat() if row.quiz_updated_at else ""
+                    )
+                    quizzes_dict[row.quiz_id] = quiz_detail
+                    
+                    # Add quiz to its module
+                    if row.module_id and row.module_id in modules_dict:
+                        modules_dict[row.module_id].quizzes.append(quiz_detail)
             
             # Convert modules dict to list and add to course
             course_detail.modules = list(modules_dict.values())

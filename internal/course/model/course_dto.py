@@ -1,6 +1,16 @@
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from uuid import UUID
+
+@dataclass
+class QuizDetail:
+    """Quiz detail model"""
+    id: UUID
+    questions: List[Dict[str, Any]]  # JSON array of quiz questions
+    is_completed: bool
+    is_correct: bool
+    created_at: str
+    updated_at: str
 
 @dataclass
 class LessonDetail:
@@ -23,6 +33,7 @@ class ModuleDetail:
     created_at: str
     updated_at: str
     lessons: List[LessonDetail]
+    quizzes: List[QuizDetail]
 
 @dataclass
 class CourseListItem:
