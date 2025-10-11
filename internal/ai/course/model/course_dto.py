@@ -10,6 +10,7 @@ class AiCourseGenerateRequest:
     token_drive: str
     prompt: str
     files_url: Optional[str] = None
+    cv: Optional[str] = None
 
 @dataclass
 class QuizQuestion:

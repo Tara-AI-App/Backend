@@ -54,6 +54,8 @@ class UserModel(Base):
     image = Column(String(500), nullable=True)
     email = Column(String(255), nullable=False, unique=True, index=True)
     password = Column(String(255), nullable=True)  # Added password column
+    status = Column(Boolean, default=True, nullable=False)  # Added status column
+    cv = Column(Text, nullable=True)  # Added cv column
     country = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     

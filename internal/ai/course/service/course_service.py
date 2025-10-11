@@ -38,7 +38,7 @@ class AiCourseService:
             course_data.token_drive = valid_drive_token
             
             # Call external API
-            external_response = await self._call_external_api(course_data)
+            external_response = await self._call_external_api(course_data, user_id)
             logger.info(f"External API course created: {external_response.title}")
             
             # Save course to database
@@ -52,7 +52,7 @@ class AiCourseService:
             # Re-raise the exception to propagate the error
             raise e
 
-    async def _call_external_api(self, course_data: AiCourseGenerateRequest) -> ExternalAiCourseGenerateResponse:
+    async def _call_external_api(self, course_data: AiCourseGenerateRequest, user_id: UUID) -> ExternalAiCourseGenerateResponse:
         """Call external AI API to generate course content"""
         url = f"{settings.AI_API_BASE_URL}/course/generate"
         
@@ -60,7 +60,9 @@ class AiCourseService:
             "token_github": course_data.token_github,
             "token_drive": course_data.token_drive,
             "prompt": course_data.prompt,
-            "files_url": course_data.files_url or ""
+            "files_url": course_data.files_url or "",
+            "user_id": str(user_id),
+            "cv": course_data.cv or ""
         }
         
         headers = {
