@@ -57,6 +57,11 @@ class JWTMiddleware:
             "/cors-test"  # Add the CORS test endpoint
         ]
         
+        # Skip authentication for all HR endpoints
+        if request.url.path.startswith("/api/v1/hr/"):
+            response = await call_next(request)
+            return response
+        
         # Check if current path should be skipped
         if request.url.path in skip_paths:
             response = await call_next(request)
