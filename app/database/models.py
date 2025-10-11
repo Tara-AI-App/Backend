@@ -74,6 +74,7 @@ class CourseModel(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     title = Column(String(500), nullable=False)
     description = Column(Text, nullable=True)
+    skill = Column(ARRAY(String), nullable=True)  # Array of skills associated with the course
     estimated_duration = Column(Integer, nullable=True)  # in hours
     difficulty = Column(String(50), nullable=True)  # Beginner, Intermediate, Advanced
     learning_objectives = Column(ARRAY(String), nullable=True)  # Array of learning objectives

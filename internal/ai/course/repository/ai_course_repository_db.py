@@ -43,8 +43,8 @@ class DatabaseAiCourseRepository(AiCourseRepository):
     def _insert_course(self, course_id: UUID, user_id: UUID, external_response: ExternalAiCourseGenerateResponse) -> None:
         """Insert course record"""
         course_query = text("""
-            INSERT INTO courses (id, user_id, title, description, estimated_duration, difficulty, learning_objectives, source_from, progress, is_completed, created_at, updated_at)
-            VALUES (:id, :user_id, :title, :description, :estimated_duration, :difficulty, :learning_objectives, :source_from, :progress, :is_completed, NOW(), NOW())
+            INSERT INTO courses (id, user_id, title, description, estimated_duration, difficulty, learning_objectives, source_from, progress, is_completed, created_at, updated_at, skill)
+            VALUES (:id, :user_id, :title, :description, :estimated_duration, :difficulty, :learning_objectives, :source_from, :progress, :is_completed, NOW(), NOW(), :skill)
         """)
         
         self.db.execute(course_query, {
@@ -57,7 +57,8 @@ class DatabaseAiCourseRepository(AiCourseRepository):
             "learning_objectives": external_response.learning_objectives,
             "source_from": external_response.source_from,
             "progress": 0.0,
-            "is_completed": False
+            "is_completed": False,
+            "skill": external_response.skills
         })
 
     def _insert_modules_and_lessons(self, course_id: UUID, external_response: ExternalAiCourseGenerateResponse) -> None:
