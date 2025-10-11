@@ -70,3 +70,16 @@ class UserLoginResponse:
     user: UserResponse
     access_token: str
     token_type: str = "bearer"
+
+
+@dataclass
+class UserSummaryResponse:
+    """DTO for user dashboard summary response"""
+    
+    learning_time_hours: float
+    courses_completed: int
+    total_quiz_completed: int
+    completion_rate: float
+    skills_acquired: list[str]
+    learning_path_progress: float
+    total_courses: int

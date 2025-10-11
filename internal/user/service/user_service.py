@@ -3,7 +3,7 @@ from uuid import UUID
 from datetime import datetime, timezone
 from jose import jwt
 from internal.user.model.user_entity import User
-from internal.user.model.user_dto import UserCreateRequest, UserLoginRequest, UserLoginResponse, UserResponse, UserCreateResponse
+from internal.user.model.user_dto import UserCreateRequest, UserLoginRequest, UserLoginResponse, UserResponse, UserCreateResponse, UserSummaryResponse
 from internal.user.repository.user_repository import UserRepository
 from app.config import settings
 
@@ -101,3 +101,17 @@ class UserService:
             return None
         except jwt.InvalidTokenError:
             return None
+    
+    async def get_user_summary(self, user_id: UUID) -> UserSummaryResponse:
+        """Get user dashboard summary statistics"""
+        summary_data = await self.user_repository.get_user_summary(user_id)
+        
+        return UserSummaryResponse(
+            learning_time_hours=summary_data["learning_time_hours"],
+            courses_completed=summary_data["courses_completed"],
+            total_quiz_completed=summary_data["total_quiz_completed"],
+            completion_rate=summary_data["completion_rate"],
+            skills_acquired=summary_data["skills_acquired"],
+            learning_path_progress=summary_data["learning_path_progress"],
+            total_courses=summary_data["total_courses"]
+        )

@@ -4,7 +4,7 @@ from typing import Optional
 from uuid import UUID
 from sqlalchemy.orm import Session
 from app.database.connection import get_db
-from internal.user.model.user_dto import UserCreateRequest, UserLoginRequest, UserLoginResponse, UserResponse, UserCreateResponse
+from internal.user.model.user_dto import UserCreateRequest, UserLoginRequest, UserLoginResponse, UserResponse, UserCreateResponse, UserSummaryResponse
 from internal.user.service.user_service import UserService
 from internal.user.repository.user_repository_db import DatabaseUserRepository
 from internal.auth.middleware import get_current_user_id, get_current_user_payload
@@ -83,6 +83,17 @@ async def get_current_user_info(
         )
     
     return user
+
+
+@router.get("/summary", response_model=UserSummaryResponse)
+async def get_user_summary(
+    user_id: str = Depends(get_current_user_id),
+    user_service: UserService = Depends(get_user_service)
+):
+    """Get user dashboard summary statistics"""
+    user_id = UUID(user_id)
+    summary = await user_service.get_user_summary(user_id)
+    return summary
 
 
 @router.get("/{user_id}", response_model=UserResponse)

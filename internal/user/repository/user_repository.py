@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Dict, Any
 from uuid import UUID
 from internal.user.model.user_entity import User
 
@@ -20,4 +20,9 @@ class UserRepository(ABC):
     @abstractmethod
     async def create_user(self, user: User) -> User:
         """Create a new user"""
+        pass
+    
+    @abstractmethod
+    async def get_user_summary(self, user_id: UUID) -> Dict[str, Any]:
+        """Get user dashboard summary statistics"""
         pass
