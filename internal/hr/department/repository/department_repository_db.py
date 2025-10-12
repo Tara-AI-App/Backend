@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from typing import List, Optional
 from internal.hr.department.repository.department_repository import DepartmentRepository
-from internal.hr.department.model.department_dto import DepartmentOverviewItem, DepartmentDetailResponse, DepartmentListResponse, DepartmentListItem
+from internal.hr.department.model.department_dto import DepartmentOverviewItem, DepartmentDetailResponse, DepartmentListResponse, DepartmentListItem, DepartmentEmployeeListResponse, DepartmentEmployeeItem
 
 
 class DatabaseDepartmentRepository(DepartmentRepository):
@@ -21,7 +21,7 @@ class DatabaseDepartmentRepository(DepartmentRepository):
                 COUNT(DISTINCT u.id) as total_users,
                 COUNT(DISTINCT CASE WHEN u.status = true THEN u.id END) as active_users,
                 COALESCE(
-                    ROUND(AVG(CASE WHEN c.progress IS NOT NULL THEN c.progress END)), 
+                    ROUND(AVG(CASE WHEN c.progress IS NOT NULL THEN c.progress END)::numeric), 
                     0
                 ) as avg_progress
             FROM departments d
@@ -56,7 +56,7 @@ class DatabaseDepartmentRepository(DepartmentRepository):
                 COUNT(DISTINCT u.id) as total_employees,
                 COUNT(DISTINCT CASE WHEN u.status = true THEN u.id END) as active_learners,
                 COALESCE(
-                    ROUND(AVG(CASE WHEN c.progress IS NOT NULL THEN c.progress END)), 
+                    ROUND(AVG(CASE WHEN c.progress IS NOT NULL THEN c.progress END)::numeric), 
                     0
                 ) as avg_progress,
                 COUNT(CASE WHEN c.is_completed = true THEN c.id END) as courses_completed
@@ -107,3 +107,51 @@ class DatabaseDepartmentRepository(DepartmentRepository):
             ))
         
         return DepartmentListResponse(departments=departments)
+    
+    async def get_department_employees(self, department_id: str) -> Optional[DepartmentEmployeeListResponse]:
+        """Get list of employees for a specific department"""
+        
+        # Query to get employees for a specific department
+        department_employees_query = text("""
+            SELECT 
+                u.id,
+                u.name,
+                u.email,
+                COALESCE(p.name, 'No Position') as position,
+                u.status,
+                COALESCE(
+                    ROUND(AVG(CASE WHEN c.progress IS NOT NULL THEN c.progress END)::numeric, 2), 
+                    0
+                ) as completion_rate,
+                COUNT(CASE WHEN c.is_completed = true THEN c.id END) as completed_courses,
+                COUNT(c.id) as total_courses
+            FROM users u
+            LEFT JOIN positions p ON u.position_id = p.id
+            LEFT JOIN courses c ON u.id = c.user_id
+            WHERE u.department_id = :department_id
+            GROUP BY u.id, u.name, u.email, p.name, u.status
+            ORDER BY u.name
+        """)
+        
+        result = self.db.execute(department_employees_query, {"department_id": department_id}).fetchall()
+        
+        if not result:
+            return None
+        
+        employees = []
+        for row in result:
+            employees.append(DepartmentEmployeeItem(
+                id=str(row.id),
+                name=row.name,
+                email=row.email,
+                position=row.position,
+                status=row.status,
+                completion_rate=float(row.completion_rate) if row.completion_rate else 0.0,
+                completed_courses=row.completed_courses or 0,
+                total_courses=row.total_courses or 0
+            ))
+        
+        return DepartmentEmployeeListResponse(
+            employees=employees,
+            total_count=len(employees)
+        )

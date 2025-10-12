@@ -41,3 +41,23 @@ class DepartmentListResponse(BaseModel):
     """Response model for department list"""
     
     departments: List[DepartmentListItem]
+
+
+class DepartmentEmployeeItem(BaseModel):
+    """Individual department employee item"""
+    
+    id: str
+    name: str
+    email: str
+    position: str
+    status: bool
+    completion_rate: float
+    completed_courses: int
+    total_courses: int
+
+
+class DepartmentEmployeeListResponse(BaseModel):
+    """Response model for department employee list"""
+    
+    employees: List[DepartmentEmployeeItem]
+    total_count: int

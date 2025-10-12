@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.database.connection import get_db
 from internal.hr.department.service.department_service import DepartmentService
 from internal.hr.department.repository.department_repository_db import DatabaseDepartmentRepository
-from internal.hr.department.model.department_dto import DepartmentOverviewResponse, DepartmentDetailResponse, DepartmentListResponse
+from internal.hr.department.model.department_dto import DepartmentOverviewResponse, DepartmentDetailResponse, DepartmentListResponse, DepartmentEmployeeListResponse
 
 router = APIRouter(prefix="/hr/department", tags=["hr-department"])
 
@@ -63,4 +63,24 @@ async def get_department_detail(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get department detail: {str(e)}"
+        )
+
+
+@router.get("/{department_id}/list", response_model=DepartmentEmployeeListResponse)
+async def get_department_employees(
+    department_id: str,
+    department_service: DepartmentService = Depends(get_department_service)
+):
+    """Get list of employees for a specific department"""
+    
+    try:
+        employees = await department_service.get_department_employees(department_id)
+        if not employees:
+            # Return empty list instead of error
+            return DepartmentEmployeeListResponse(employees=[], total_count=0)
+        return employees
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get department employees: {str(e)}"
         )

@@ -1,5 +1,5 @@
 from internal.hr.department.repository.department_repository import DepartmentRepository
-from internal.hr.department.model.department_dto import DepartmentOverviewItem, DepartmentOverviewResponse, DepartmentDetailResponse, DepartmentListResponse
+from internal.hr.department.model.department_dto import DepartmentOverviewItem, DepartmentOverviewResponse, DepartmentDetailResponse, DepartmentListResponse, DepartmentEmployeeListResponse
 from typing import List, Optional
 
 
@@ -21,3 +21,7 @@ class DepartmentService:
     async def get_department_list(self) -> DepartmentListResponse:
         """Get list of all departments"""
         return await self.repository.get_department_list()
+    
+    async def get_department_employees(self, department_id: str) -> Optional[DepartmentEmployeeListResponse]:
+        """Get list of employees for a specific department"""
+        return await self.repository.get_department_employees(department_id)

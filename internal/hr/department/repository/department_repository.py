@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
-from internal.hr.department.model.department_dto import DepartmentOverviewItem, DepartmentDetailResponse, DepartmentListResponse
+from internal.hr.department.model.department_dto import DepartmentOverviewItem, DepartmentDetailResponse, DepartmentListResponse, DepartmentEmployeeListResponse
 
 
 class DepartmentRepository(ABC):
@@ -19,4 +19,9 @@ class DepartmentRepository(ABC):
     @abstractmethod
     async def get_department_list(self) -> DepartmentListResponse:
         """Get list of all departments"""
+        pass
+    
+    @abstractmethod
+    async def get_department_employees(self, department_id: str) -> Optional[DepartmentEmployeeListResponse]:
+        """Get list of employees for a specific department"""
         pass
