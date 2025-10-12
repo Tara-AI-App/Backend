@@ -45,6 +45,7 @@ class CourseListItem:
     difficulty: Optional[str]
     learning_objectives: Optional[List[str]]
     source_from: Optional[List[str]]
+    skill: Optional[List[str]]
     progress: float
     is_completed: bool
     created_at: str

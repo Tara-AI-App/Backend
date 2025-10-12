@@ -12,11 +12,11 @@ class CourseService:
     def __init__(self, course_repository: CourseRepository):
         self.course_repository = course_repository
 
-    async def get_courses(self, user_id: UUID) -> CourseListResponse:
-        """Get all courses for a user"""
+    async def get_courses(self, user_id: UUID, limit: int = 10, offset: int = 0) -> CourseListResponse:
+        """Get courses for a user with pagination"""
         try:
-            logger.info(f"Getting courses for user {user_id}")
-            return await self.course_repository.get_courses_by_user(user_id)
+            logger.info(f"Getting courses for user {user_id} with limit {limit} and offset {offset}")
+            return await self.course_repository.get_courses_by_user(user_id, limit, offset)
         except Exception as e:
             logger.error(f"Error getting courses for user {user_id}: {str(e)}")
             raise e

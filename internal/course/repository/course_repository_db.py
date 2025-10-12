@@ -14,20 +14,35 @@ class DatabaseCourseRepository(CourseRepository):
     def __init__(self, db: Session):
         self.db = db
 
-    async def get_courses_by_user(self, user_id: UUID) -> CourseListResponse:
-        """Get all courses for a user"""
+    async def get_courses_by_user(self, user_id: UUID, limit: int = 10, offset: int = 0) -> CourseListResponse:
+        """Get courses for a user with pagination"""
         try:
-            # Query to get all courses for the user
+            # Query to get total count
+            count_query = text("""
+                SELECT COUNT(*) as total
+                FROM courses 
+                WHERE user_id = :user_id
+            """)
+            
+            count_result = self.db.execute(count_query, {"user_id": user_id})
+            total_count = count_result.fetchone().total
+            
+            # Query to get paginated courses for the user
             courses_query = text("""
                 SELECT id, title, description, estimated_duration, difficulty, 
                        learning_objectives, source_from, progress, is_completed, 
-                       created_at, updated_at
+                       skill, created_at, updated_at
                 FROM courses 
                 WHERE user_id = :user_id 
                 ORDER BY created_at DESC
+                LIMIT :limit OFFSET :offset
             """)
             
-            result = self.db.execute(courses_query, {"user_id": user_id})
+            result = self.db.execute(courses_query, {
+                "user_id": user_id,
+                "limit": limit,
+                "offset": offset
+            })
             courses_data = result.fetchall()
             
             # Convert to CourseListItem objects
@@ -41,6 +56,7 @@ class DatabaseCourseRepository(CourseRepository):
                     difficulty=row.difficulty,
                     learning_objectives=row.learning_objectives,
                     source_from=row.source_from,
+                    skill=row.skill,
                     progress=row.progress,
                     is_completed=row.is_completed,
                     created_at=row.created_at.isoformat() if row.created_at else "",
@@ -50,7 +66,7 @@ class DatabaseCourseRepository(CourseRepository):
             
             return CourseListResponse(
                 courses=courses,
-                total=len(courses)
+                total=total_count
             )
             
         except Exception as e:

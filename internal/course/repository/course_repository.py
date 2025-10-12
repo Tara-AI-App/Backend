@@ -7,8 +7,8 @@ class CourseRepository(ABC):
     """Abstract repository for course operations"""
 
     @abstractmethod
-    async def get_courses_by_user(self, user_id: UUID) -> CourseListResponse:
-        """Get all courses for a user"""
+    async def get_courses_by_user(self, user_id: UUID, limit: int = 10, offset: int = 0) -> CourseListResponse:
+        """Get courses for a user with pagination"""
         pass
 
     @abstractmethod
