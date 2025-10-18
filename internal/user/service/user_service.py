@@ -64,7 +64,8 @@ class UserService:
             image=user.image,
             email=user.email,
             country=user.country,
-            created_at=user.created_at
+            created_at=user.created_at,
+            cv=user.cv
         )
         
         return UserLoginResponse(
@@ -89,7 +90,8 @@ class UserService:
             image=user.image,
             email=user.email,
             country=user.country,
-            created_at=user.created_at
+            created_at=user.created_at,
+            cv=user.cv
         )
     
     def verify_token(self, token: str) -> Optional[dict]:

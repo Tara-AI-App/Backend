@@ -11,15 +11,17 @@ from internal.ai.guide.model.guide_dto import (
 from internal.oauth.service.oauth_service import OAuthService
 from internal.ai.guide.repository.ai_guide_repository import AiGuideRepository
 from app.config import settings
+from internal.user.service.user_service import UserService
 
 logger = logging.getLogger(__name__)
 
 class AiGuideService:
     """Service for AI guide operations"""
 
-    def __init__(self, oauth_service: OAuthService, guide_repository: AiGuideRepository):
+    def __init__(self, oauth_service: OAuthService, guide_repository: AiGuideRepository, user_service: UserService):
         self.oauth_service = oauth_service
         self.guide_repository = guide_repository
+        self.user_service = user_service
 
     async def generate_guide(self, guide_data: AiGuideGenerateRequest, user_id: UUID) -> AiGuideGenerateResponse:
         """Generate a guide using AI"""
@@ -33,7 +35,15 @@ class AiGuideService:
             
             # Update guide_data with the valid token
             guide_data.token_drive = valid_drive_token
-            
+
+            # Get user CV
+            user = await self.user_service.get_user_by_id(user_id)
+            if not user:
+                raise ValueError(f"User not found for ID: {user_id}")
+
+            # Update guide_data with the user CV
+            guide_data.cv = user.cv
+
             # Call external API
             external_response = await self._call_external_api(guide_data, user_id)
             logger.info(f"External API guide created: {external_response.title}")

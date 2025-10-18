@@ -16,7 +16,7 @@ class DatabaseUserRepository(UserRepository):
         """Get user by ID using raw SQL"""
         query = text("""
             SELECT id, department_id, position_id, manager_id, location_id, 
-                   name, image, email, password, country, created_at
+                   name, image, email, password, country, created_at, cv
             FROM users 
             WHERE id = :user_id
         """)
@@ -37,14 +37,15 @@ class DatabaseUserRepository(UserRepository):
             email=result.email,
             password=result.password,
             country=result.country,
-            created_at=result.created_at
+            created_at=result.created_at,
+            cv=result.cv
         )
     
     async def get_user_by_email(self, email: str) -> Optional[User]:
         """Get user by email using raw SQL"""
         query = text("""
             SELECT id, department_id, position_id, manager_id, location_id, 
-                   name, image, email, password, country, created_at
+                   name, image, email, password, country, created_at, cv
             FROM users 
             WHERE email = :email
         """)
@@ -65,7 +66,8 @@ class DatabaseUserRepository(UserRepository):
             email=result.email,
             password=result.password,
             country=result.country,
-            created_at=result.created_at
+            created_at=result.created_at,
+            cv=result.cv
         )
     
     async def create_user(self, user: User) -> User:

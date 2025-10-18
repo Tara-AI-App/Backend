@@ -9,6 +9,8 @@ from internal.ai.guide.repository.ai_guide_repository_db import DatabaseAiGuideR
 from internal.oauth.service.oauth_service import OAuthService
 from internal.oauth.repository.oauth_repository_db import DatabaseOAuthRepository
 from internal.auth.middleware import get_current_user_id
+from internal.user.service.user_service import UserService
+from internal.user.repository.user_repository_db import DatabaseUserRepository
 
 router = APIRouter(prefix="/ai/guide", tags=["ai-guide"])
 security = HTTPBearer()
@@ -18,13 +20,19 @@ def get_oauth_service(db: Session = Depends(get_db)) -> OAuthService:
     oauth_repository = DatabaseOAuthRepository(db)
     return OAuthService(oauth_repository)
 
+def get_user_service(db: Session = Depends(get_db)) -> UserService:
+    """Dependency to get user service"""
+    user_repository = DatabaseUserRepository(db)
+    return UserService(user_repository)
+
 def get_ai_guide_service(
     oauth_service: OAuthService = Depends(get_oauth_service),
+    user_service: UserService = Depends(get_user_service),
     db: Session = Depends(get_db)
 ) -> AiGuideService:
     """Dependency to get AI guide service"""
     guide_repository = DatabaseAiGuideRepository(db)
-    return AiGuideService(oauth_service, guide_repository)
+    return AiGuideService(oauth_service, guide_repository, user_service)
 
 @router.post("/generate", response_model=AiGuideGenerateResponse)
 async def generate_guide(

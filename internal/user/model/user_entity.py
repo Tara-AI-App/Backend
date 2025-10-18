@@ -20,6 +20,7 @@ class User:
     location_id: Optional[UUID] = None
     image: Optional[str] = None
     created_at: Optional[datetime] = None
+    cv: Optional[str] = None
     
     def __post_init__(self):
         """Validate user data after initialization"""

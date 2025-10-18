@@ -61,6 +61,7 @@ class UserResponse:
     email: str
     country: Optional[str]
     created_at: datetime
+    cv: Optional[str]
 
 
 @dataclass
