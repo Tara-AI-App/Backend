@@ -67,6 +67,7 @@ class UserModel(Base):
     manager = relationship("UserModel", remote_side=[id], back_populates="subordinates")
     subordinates = relationship("UserModel", back_populates="manager")
     courses = relationship("CourseModel", back_populates="user")
+    guides = relationship("GuideModel", back_populates="user")
     oauth_tokens = relationship("OAuthTokenModel", back_populates="user")
 
 class CourseModel(Base):
@@ -154,3 +155,19 @@ class QuizModel(Base):
     
     # Relationships
     module = relationship("ModuleModel", back_populates="quizzes")
+
+class GuideModel(Base):
+    """Guide model for AI-generated guides"""
+    __tablename__ = "guides"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    title = Column(String(500), nullable=False)
+    description = Column(Text, nullable=True)
+    content = Column(Text, nullable=False)
+    source_from = Column(ARRAY(String), nullable=True)  # Array of source URLs
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
+    # Relationships
+    user = relationship("UserModel", back_populates="guides")

@@ -5,6 +5,7 @@ import logging
 from internal.user.handler.user_handler import router as user_router
 from internal.oauth.handler.oauth_handler import router as oauth_router
 from internal.ai.course.handler.course_handler import router as ai_course_router
+from internal.ai.guide.handler.guide_handler import router as ai_guide_router
 from internal.course.handler.course_handler import router as course_router
 from internal.hr.company.handler.company_handler import router as hr_company_router
 from internal.hr.department.handler.department_handler import router as hr_department_router
@@ -66,6 +67,7 @@ def create_app() -> FastAPI:
     app.include_router(user_router, prefix=settings.API_V1_STR)
     app.include_router(oauth_router, prefix=settings.API_V1_STR)
     app.include_router(ai_course_router, prefix=settings.API_V1_STR)
+    app.include_router(ai_guide_router, prefix=settings.API_V1_STR)
     app.include_router(course_router, prefix=settings.API_V1_STR)
     app.include_router(hr_company_router, prefix=settings.API_V1_STR)
     app.include_router(hr_department_router, prefix=settings.API_V1_STR)
