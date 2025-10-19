@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
-from internal.ai.guide.model.guide_dto import AiGuideGenerateRequest, AiGuideGenerateResponse, ExternalAiGuideGenerateResponse, GuideListResponse, GuideDetailResponse
+from internal.guide.model.guide_dto import AiGuideGenerateRequest, AiGuideGenerateResponse, ExternalAiGuideGenerateResponse, GuideListResponse, GuideDetailResponse
 
-class AiGuideRepository(ABC):
-    """Abstract repository for AI guide operations"""
+class GuideRepository(ABC):
+    """Abstract repository for guide operations"""
 
     @abstractmethod
     async def save_guide(self, user_id: UUID, external_response: ExternalAiGuideGenerateResponse) -> AiGuideGenerateResponse:

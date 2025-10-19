@@ -2,7 +2,7 @@ import httpx
 import logging
 from typing import Optional
 from uuid import UUID
-from internal.ai.guide.model.guide_dto import (
+from internal.guide.model.guide_dto import (
     AiGuideGenerateRequest, 
     AiGuideGenerateResponse, 
     ExternalAiGuideGenerateResponse,
@@ -10,16 +10,16 @@ from internal.ai.guide.model.guide_dto import (
     GuideDetailResponse
 )
 from internal.oauth.service.oauth_service import OAuthService
-from internal.ai.guide.repository.ai_guide_repository import AiGuideRepository
+from internal.guide.repository.guide_repository import GuideRepository
 from app.config import settings
 from internal.user.service.user_service import UserService
 
 logger = logging.getLogger(__name__)
 
-class AiGuideService:
-    """Service for AI guide operations"""
+class GuideService:
+    """Service for guide operations"""
 
-    def __init__(self, oauth_service: OAuthService, guide_repository: AiGuideRepository, user_service: UserService):
+    def __init__(self, oauth_service: OAuthService, guide_repository: GuideRepository, user_service: UserService):
         self.oauth_service = oauth_service
         self.guide_repository = guide_repository
         self.user_service = user_service

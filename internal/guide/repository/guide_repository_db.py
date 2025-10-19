@@ -3,13 +3,13 @@ from typing import Optional
 from uuid import UUID, uuid4
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from internal.ai.guide.repository.ai_guide_repository import AiGuideRepository
-from internal.ai.guide.model.guide_dto import AiGuideGenerateResponse, ExternalAiGuideGenerateResponse, GuideListResponse, GuideListItem, GuideDetailResponse
+from internal.guide.repository.guide_repository import GuideRepository
+from internal.guide.model.guide_dto import AiGuideGenerateResponse, ExternalAiGuideGenerateResponse, GuideListResponse, GuideListItem, GuideDetailResponse
 
 logger = logging.getLogger(__name__)
 
-class DatabaseAiGuideRepository(AiGuideRepository):
-    """Database repository for AI guide operations using raw SQL queries"""
+class DatabaseGuideRepository(GuideRepository):
+    """Database repository for guide operations using raw SQL queries"""
 
     def __init__(self, db: Session):
         self.db = db
