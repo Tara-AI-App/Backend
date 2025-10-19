@@ -1,5 +1,6 @@
 import httpx
 import logging
+import uuid
 from typing import Optional
 from uuid import UUID
 from sqlalchemy.orm import Session
@@ -57,7 +58,10 @@ class ChatService:
             
             if not session:
                 # Create new AI session
-                ai_session_id = await self._create_new_ai_session(str(user_id))
+                ai_session_id = str(uuid.uuid4())
+                
+                await self._create_new_ai_session(str(user_id), ai_session_id)
+                
                 session = await self.session_repository.get_or_create_course_session(
                     user_id, UUID(course_id), ai_session_id
                 )
@@ -119,7 +123,10 @@ class ChatService:
             
             if not session:
                 # Create new AI session
-                ai_session_id = await self._create_new_ai_session(str(user_id))
+                ai_session_id = str(uuid.uuid4())
+
+                await self._create_new_ai_session(str(user_id), ai_session_id)
+                
                 session = await self.session_repository.get_or_create_guide_session(
                     user_id, guide_uuid, ai_session_id
                 )
@@ -162,9 +169,9 @@ class ChatService:
             logger.error(f"Error in guide chat for guide {guide_id}: {str(e)}")
             raise e
 
-    async def _create_new_ai_session(self, user_id: str) -> str:
+    async def _create_new_ai_session(self, user_id: str, session_id: str) -> str:
         """Create a new AI session"""
-        url = f"{self.ai_base_url}/apps/follow_up_agent/users/{user_id}/sessions"
+        url = f"{self.ai_base_url}/apps/follow_up_agent/users/{user_id}/sessions/{session_id}"
         
         payload = {
             "parts": []
@@ -174,12 +181,22 @@ class ChatService:
             "Content-Type": "application/json"
         }
         
+        # Log the request
+        logger.info(f"Creating new AI session for user {user_id}")
+        logger.info(f"Sending request to {url}")
+        logger.info(f"Request payload: {payload}")
+        
         try:
             async with httpx.AsyncClient(timeout=30) as client:
                 response = await client.post(url, json=payload, headers=headers)
                 response.raise_for_status()
                 
                 data = response.json()
+                
+                # Log the response
+                logger.info(f"Response status: {response.status_code}")
+                logger.info(f"Response data: {data}")
+                
                 session_id = data.get("session_id")
                 
                 if not session_id:
