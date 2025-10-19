@@ -11,6 +11,7 @@ from internal.course.handler.course_handler import router as course_router
 from internal.hr.company.handler.company_handler import router as hr_company_router
 from internal.hr.department.handler.department_handler import router as hr_department_router
 from internal.hr.employee.handler.employee_handler import router as hr_employee_router
+from internal.ai.chat.handler.chat_handler import router as chat_router
 from internal.auth.middleware import JWTMiddleware
 from app.config import settings
 from app.database.connection import SessionLocal
@@ -74,6 +75,7 @@ def create_app() -> FastAPI:
     app.include_router(hr_company_router, prefix=settings.API_V1_STR)
     app.include_router(hr_department_router, prefix=settings.API_V1_STR)
     app.include_router(hr_employee_router, prefix=settings.API_V1_STR)
+    app.include_router(chat_router, prefix=settings.API_V1_STR)
 
     @app.get("/")
     async def read_root():

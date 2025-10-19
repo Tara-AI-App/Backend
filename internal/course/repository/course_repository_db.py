@@ -24,7 +24,7 @@ class DatabaseCourseRepository(CourseRepository):
                 WHERE user_id = :user_id
             """)
             
-            count_result = self.db.execute(count_query, {"user_id": user_id})
+            count_result = self.db.execute(count_query, {"user_id": str(user_id)})
             total_count = count_result.fetchone().total
             
             # Query to get paginated courses for the user
@@ -39,7 +39,7 @@ class DatabaseCourseRepository(CourseRepository):
             """)
             
             result = self.db.execute(courses_query, {
-                "user_id": user_id,
+                "user_id": str(user_id),
                 "limit": limit,
                 "offset": offset
             })
@@ -117,7 +117,7 @@ class DatabaseCourseRepository(CourseRepository):
                 ORDER BY m.order_index ASC, l.index ASC
             """)
             
-            result = self.db.execute(join_query, {"course_id": course_id, "user_id": user_id})
+            result = self.db.execute(join_query, {"course_id": str(course_id), "user_id": str(user_id)})
             rows = result.fetchall()
             
             if not rows:
@@ -213,7 +213,7 @@ class DatabaseCourseRepository(CourseRepository):
                 WHERE l.id = :lesson_id AND c.user_id = :user_id
             """)
             
-            result = self.db.execute(verify_query, {"lesson_id": lesson_id, "user_id": user_id})
+            result = self.db.execute(verify_query, {"lesson_id": str(lesson_id), "user_id": str(user_id)})
             lesson_data = result.fetchone()
             
             if not lesson_data:
@@ -236,7 +236,7 @@ class DatabaseCourseRepository(CourseRepository):
             """)
             
             self.db.execute(update_query, {
-                "lesson_id": lesson_id,
+                "lesson_id": str(lesson_id),
                 "is_completed": is_completed
             })
             
@@ -281,7 +281,7 @@ class DatabaseCourseRepository(CourseRepository):
                 WHERE q.id = :quiz_id AND c.user_id = :user_id
             """)
             
-            result = self.db.execute(verify_query, {"quiz_id": quiz_id, "user_id": user_id})
+            result = self.db.execute(verify_query, {"quiz_id": str(quiz_id), "user_id": str(user_id)})
             quiz_data = result.fetchone()
             
             if not quiz_data:
@@ -304,7 +304,7 @@ class DatabaseCourseRepository(CourseRepository):
             """)
             
             self.db.execute(update_query, {
-                "quiz_id": quiz_id,
+                "quiz_id": str(quiz_id),
                 "is_completed": is_completed
             })
             
@@ -356,7 +356,7 @@ class DatabaseCourseRepository(CourseRepository):
                 WHERE c.id = :course_id AND c.user_id = :user_id
             """)
             
-            result = self.db.execute(progress_query, {"course_id": course_id, "user_id": user_id})
+            result = self.db.execute(progress_query, {"course_id": str(course_id), "user_id": str(user_id)})
             row = result.fetchone()
             
             if not row:
@@ -428,8 +428,8 @@ class DatabaseCourseRepository(CourseRepository):
             """)
             
             result = self.db.execute(update_query, {
-                "course_id": course_id,
-                "user_id": user_id,
+                "course_id": str(course_id),
+                "user_id": str(user_id),
                 "progress": progress,
                 "is_completed": is_course_completed
             })
@@ -470,7 +470,7 @@ class DatabaseCourseRepository(CourseRepository):
                 ORDER BY m.order_index
             """)
             
-            result = self.db.execute(module_check_query, {"course_id": course_id})
+            result = self.db.execute(module_check_query, {"course_id": str(course_id)})
             modules_data = result.fetchall()
             
             logger.info(f"Checking module completion for course {course_id}")
@@ -501,7 +501,7 @@ class DatabaseCourseRepository(CourseRepository):
                     """)
                     
                     self.db.execute(update_module_query, {
-                        "module_id": module_id,
+                        "module_id": str(module_id),
                         "is_completed": should_be_completed
                     })
                     

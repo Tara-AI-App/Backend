@@ -44,8 +44,8 @@ class DatabaseGuideRepository(GuideRepository):
         """)
         
         self.db.execute(guide_query, {
-            "id": guide_id,
-            "user_id": user_id,
+            "id": str(guide_id),
+            "user_id": str(user_id),
             "title": external_response.title,
             "description": external_response.description,
             "content": external_response.content,
@@ -62,7 +62,7 @@ class DatabaseGuideRepository(GuideRepository):
                 ORDER BY created_at DESC
             """)
             
-            result = self.db.execute(query, {"user_id": user_id})
+            result = self.db.execute(query, {"user_id": str(user_id)})
             rows = result.fetchall()
             
             guides = []
@@ -96,7 +96,7 @@ class DatabaseGuideRepository(GuideRepository):
                 WHERE id = :guide_id AND user_id = :user_id
             """)
             
-            result = self.db.execute(query, {"guide_id": guide_id, "user_id": user_id})
+            result = self.db.execute(query, {"guide_id": str(guide_id), "user_id": str(user_id)})
             row = result.fetchone()
             
             if not row:
