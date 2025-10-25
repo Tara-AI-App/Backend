@@ -26,7 +26,7 @@ class OAuthService:
         if not state:
             state = "default_state"
             
-        auth_url = f"https://github.com/login/oauth/authorize?client_id={settings.GH_CLIENT_ID}&redirect_uri={settings.GH_REDIRECT_URI}&scope=repo&state={state}"
+        auth_url = f"https://github.com/login/oauth/authorize?client_id={settings.GH_CLIENT_ID}&redirect_uri={settings.GH_REDIRECT_URI}&scope=repo,read:org&state={state}"
         return auth_url
 
     async def exchange_github_code_for_token(
