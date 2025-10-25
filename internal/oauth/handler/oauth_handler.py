@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Optional, List
 from uuid import UUID
@@ -172,18 +172,10 @@ async def get_github_token(
 async def get_user_oauth_tokens(
     providers: Optional[List[str]] = Query(None, description="Filter by OAuth provider(s) (e.g., 'github', 'google'). Can specify multiple providers."),
     user_id: str = Depends(get_current_user_id),
-    oauth_service: OAuthService = Depends(get_oauth_service),
-    response: Response = None
+    oauth_service: OAuthService = Depends(get_oauth_service)
 ):
     """Get current user's OAuth tokens, optionally filtered by provider(s)"""
     try:
-        # Add explicit CORS headers
-        if response:
-            response.headers["Access-Control-Allow-Origin"] = "https://taraai.tech"
-            response.headers["Access-Control-Allow-Credentials"] = "true"
-            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-            response.headers["Access-Control-Allow-Headers"] = "accept, authorization, content-type, origin, x-requested-with"
-        
         user_id = UUID(user_id)
         token_entities = await oauth_service.get_user_tokens_by_provider(user_id, providers)
         
@@ -212,17 +204,6 @@ async def get_user_oauth_tokens(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get OAuth tokens: {str(e)}"
         )
-
-
-@router.options("/tokens")
-async def options_tokens(response: Response):
-    """Handle CORS preflight requests for tokens endpoint"""
-    response.headers["Access-Control-Allow-Origin"] = "https://taraai.tech"
-    response.headers["Access-Control-Allow-Credentials"] = "true"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "accept, authorization, content-type, origin, x-requested-with"
-    return {"message": "CORS preflight handled"}
-
 
 @router.get("/drive/auth-url")
 async def get_google_drive_auth_url(

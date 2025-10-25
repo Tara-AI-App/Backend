@@ -63,8 +63,7 @@ def create_app() -> FastAPI:
         expose_headers=["*"],  # Headers that the frontend can access
     )
     
-    # Add JWT authentication middleware - using add_middleware for proper order
-    app.add_middleware(JWTMiddleware)
+    app.middleware("http")(JWTMiddleware())
 
     # Include routers
     app.include_router(user_router, prefix=settings.API_V1_STR)
