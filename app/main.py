@@ -45,6 +45,7 @@ def create_app() -> FastAPI:
             "http://localhost:3001",  # Alternative port
             "http://127.0.0.1:3001",  # Alternative localhost and port
             "https://taraai.tech",
+            "https://api.taraai.tech",  # Backend API domain
             "https://hr.taraai.tech",  
         ],
         allow_credentials=True,  # Allow credentials (cookies, authorization headers)
