@@ -48,18 +48,8 @@ def create_app() -> FastAPI:
             "https://hr.taraai.tech",  
         ],
         allow_credentials=True,  # Allow credentials (cookies, authorization headers)
-        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],  # Specific methods
-        allow_headers=[
-            "accept",
-            "accept-encoding", 
-            "authorization",
-            "content-type",
-            "dnt",
-            "origin",
-            "user-agent",
-            "x-csrftoken",
-            "x-requested-with",
-        ],  # Specific headers that are commonly needed
+        allow_methods=["*"],  # Allow all methods including OPTIONS
+        allow_headers=["*"],  # Allow all headers
         expose_headers=["*"],  # Headers that the frontend can access
     )
     
@@ -92,7 +82,15 @@ def create_app() -> FastAPI:
     @app.options("/{path:path}")
     async def cors_preflight(path: str):
         """Handle CORS preflight requests"""
+        logger.info(f"CORS preflight request for path: {path}")
         return {"message": "CORS preflight handled"}
+    
+    # Add explicit OPTIONS handler for the specific failing endpoint
+    @app.options("/api/v1/oauth/tokens")
+    async def oauth_tokens_preflight():
+        """Handle CORS preflight for oauth tokens endpoint"""
+        logger.info("CORS preflight request for oauth tokens endpoint")
+        return {"message": "CORS preflight handled for oauth tokens"}
 
     @app.on_event("startup")
     async def startup_event():
