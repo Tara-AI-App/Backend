@@ -45,7 +45,6 @@ def create_app() -> FastAPI:
             "http://localhost:3001",  # Alternative port
             "http://127.0.0.1:3001",  # Alternative localhost and port
             "https://taraai.tech",
-            "https://api.taraai.tech",  # Backend API domain
             "https://hr.taraai.tech",  
         ],
         allow_credentials=True,  # Allow credentials (cookies, authorization headers)
@@ -64,8 +63,8 @@ def create_app() -> FastAPI:
         expose_headers=["*"],  # Headers that the frontend can access
     )
     
-    # Add JWT authentication middleware
-    app.middleware("http")(JWTMiddleware())
+    # Add JWT authentication middleware - using add_middleware for proper order
+    app.add_middleware(JWTMiddleware)
 
     # Include routers
     app.include_router(user_router, prefix=settings.API_V1_STR)
