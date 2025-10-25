@@ -48,8 +48,18 @@ def create_app() -> FastAPI:
             "https://hr.taraai.tech",  
         ],
         allow_credentials=True,  # Allow credentials (cookies, authorization headers)
-        allow_methods=["*"],  # Allow all methods including OPTIONS
-        allow_headers=["*"],  # Allow all headers
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"],  # Explicit methods
+        allow_headers=[
+            "Accept",
+            "Accept-Language", 
+            "Content-Language",
+            "Content-Type",
+            "Authorization",
+            "X-Requested-With",
+            "Origin",
+            "Access-Control-Request-Method",
+            "Access-Control-Request-Headers",
+        ],  # Explicit headers for CORS
         expose_headers=["*"],  # Headers that the frontend can access
     )
     
@@ -79,18 +89,6 @@ def create_app() -> FastAPI:
     async def cors_test():
         return {"message": "CORS is working!", "timestamp": "2025-01-27"}
     
-    @app.options("/{path:path}")
-    async def cors_preflight(path: str):
-        """Handle CORS preflight requests"""
-        logger.info(f"CORS preflight request for path: {path}")
-        return {"message": "CORS preflight handled"}
-    
-    # Add explicit OPTIONS handler for the specific failing endpoint
-    @app.options("/api/v1/oauth/tokens")
-    async def oauth_tokens_preflight():
-        """Handle CORS preflight for oauth tokens endpoint"""
-        logger.info("CORS preflight request for oauth tokens endpoint")
-        return {"message": "CORS preflight handled for oauth tokens"}
 
     @app.on_event("startup")
     async def startup_event():
