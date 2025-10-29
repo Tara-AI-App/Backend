@@ -1,71 +1,82 @@
-# Tara API
+# Tara Backend API
 
-A FastAPI application with Domain Driven Design, AI integration, and database migrations.
+A modern FastAPI application with Domain Driven Design, AI-powered learning management, OAuth integration, and comprehensive HR management features.
+
+## 🎯 Features
+
+- **AI-Powered Learning**: Generate courses and guides using AI
+- **Authentication & Authorization**: JWT-based auth with OAuth support (GitHub, Google)
+- **Learning Management System**: Courses, lessons, quizzes, and learning paths
+- **HR Management**: Employee, company, and department management
+- **Chat System**: Interactive chat with AI-powered assistance
+- **Database Migrations**: Automated schema management with Alembic
+- **RESTful API**: Clean, well-documented API endpoints
 
 ## 🏗️ Project Structure
 
 ```
-tara/
-├── app/                          # FastAPI application
-│   ├── main.py                   # FastAPI app creation
-│   ├── config.py                 # Application settings
+tara-be/
+├── app/                          # FastAPI application core
+│   ├── main.py                   # FastAPI app creation & routing
+│   ├── config.py                 # Application settings & env vars
 │   └── database/                 # Database configuration
-│       ├── connection.py         # Database connection
+│       ├── connection.py         # SQLAlchemy connection
 │       └── models.py             # SQLAlchemy models
-├── internal/                     # Internal business logic
-│   ├── domain/                   # Business domains
-│   │   └── item/                 # Item domain
-│   │       ├── handler/          # API endpoints
-│   │       ├── service/          # Business logic
-│   │       ├── repository/       # Data access
-│   │       └── model/            # Domain models
-│   └── ai/                       # AI module
-│       ├── handler/              # AI API endpoints
-│       ├── service/              # AI business logic
-│       ├── repository/           # AI data access
-│       └── model/                # AI models & DTOs
-├── alembic/                      # Database migrations
-├── scripts/                      # Utility scripts
-├── tests/                        # Test files
-├── requirements/                 # Dependencies
-│   ├── base.txt
-│   ├── dev.txt
-│   └── prod.txt
-├── run.py                        # Entry point
-└── main.py                       # Legacy entry point
+│
+├── internal/                     # Business logic layer
+│   ├── ai/                       # AI-powered features
+│   │   ├── chat/                 # AI chat system
+│   │   ├── course/               # AI course generation
+│   │   └── guide/               # AI guide generation
+│   ├── auth/                     # Authentication middleware
+│   ├── course/                   # Course management
+│   ├── guide/                    # Guide management
+│   ├── hr/                       # HR management
+│   │   ├── company/             # Company management
+│   │   ├── department/          # Department management
+│   │   └── employee/           # Employee management
+│   ├── oauth/                    # OAuth integration
+│   └── user/                    # User management
+│
+├── alembic/                     # Database migrations
+│   ├── versions/                # Migration files
+│   └── env.py                   # Alembic environment config
+│
+├── scripts/                     # Utility scripts
+│   ├── db_manager.py            # Database management
+│   ├── init_db.py               # Database initialization
+│   └── migrate.py               # Migration helpers
+│
+├── tests/                       # Test files
+│   ├── conftest.py              # Test configuration
+│   └── test_items.py          # Test examples
+│
+├── requirements.txt             # Python dependencies
+├── alembic.ini                  # Alembic configuration
+├── Dockerfile                   # Docker container config
+├── run.py                       # Development entry point
+└── main.py                      # Legacy entry point
 ```
 
 ## 🚀 Quick Start
 
-### 1. Environment Setup
+### Prerequisites
 
-Copy the environment template and configure your settings:
+- Python 3.11+
+- PostgreSQL 12+ (or compatible database)
+- pip
+
+### 1. Install Dependencies
 
 ```bash
-cp .env.example .env
+# Install Python dependencies
+pip install -r requirements.txt
 ```
 
-Edit `.env` with your actual credentials:
+### 2. Database Setup
 
 ```bash
-# Database Configuration (REQUIRED)
-DATABASE_URL=postgresql://your_username:your_password@localhost:5432/your_database
-```
-
-### 2. Install Dependencies
-
-```bash
-# For development
-pip install -r requirements/dev.txt
-
-# For production
-pip install -r requirements/prod.txt
-```
-
-### 3. Database Setup
-
-```bash
-# Run migrations
+# Run database migrations
 alembic upgrade head
 
 # Or initialize database manually
@@ -75,22 +86,25 @@ python scripts/init_db.py
 ### 3. Run the Application
 
 ```bash
-# Using run.py
+# Development mode with auto-reload
 python run.py
 
 # Using uvicorn directly
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --host 0.0.0.0 --port 9000
 
-# Using legacy main.py
+# Production mode
 python main.py
 ```
 
-### 4. Access the API
+### 4. Docker Deployment
 
-- **API**: `http://localhost:8000`
-- **Interactive Docs**: `http://localhost:8000/docs`
-- **ReDoc**: `http://localhost:8000/redoc`
-- **Health Check**: `http://localhost:8000/health`
+```bash
+# Build the Docker image
+docker build -t tara-backend .
+
+# Run the container
+docker run -p 9000:9000 --env-file .env tara-backend
+```
 
 ## 🗄️ Database Migrations
 
@@ -143,102 +157,303 @@ pytest
 pytest --cov=app --cov=internal
 ```
 
-## 📋 API Endpoints
-
-### Items
-- `GET /api/v1/items/` - Get all items with statistics
-- `GET /api/v1/items/{item_id}` - Get item by ID
-- `POST /api/v1/items/` - Create new item
-- `PUT /api/v1/items/{item_id}` - Update item
-- `DELETE /api/v1/items/{item_id}` - Delete item
-- `GET /api/v1/items/expensive/?threshold=100.00` - Get expensive items
-
-### AI
-- `POST /api/v1/ai/chat` - Chat with AI assistant
-- `POST /api/v1/ai/analyze` - Analyze items with AI
-- `POST /api/v1/ai/recommendations` - Get AI recommendations
-- `POST /api/v1/ai/enhance-description/{item_id}` - Enhance descriptions
-- `POST /api/v1/ai/analyze-pricing/{item_id}` - Analyze pricing
-- `GET /api/v1/ai/conversations/{user_id}` - Get conversation history
-- `GET /api/v1/ai/analyses/{item_id}` - Get item analyses
-- `GET /api/v1/ai/recommendations/{user_id}` - Get recommendation history
-
-### System
-- `GET /` - Welcome message
-- `GET /health` - Health check
-
-## 🔧 Configuration
-
-Copy `.env.example` to `.env` and modify settings:
-
-```bash
-cp .env.example .env
-```
-
-### Database Configuration
-
-```env
-# PostgreSQL (recommended)
-DATABASE_URL=postgresql://user:password@localhost:5432/tara
-
-# SQLite (for development)
-DATABASE_URL=sqlite:///./tara.db
-
-# MySQL
-DATABASE_URL=mysql://user:password@localhost:3306/tara
-```
+For detailed API documentation, visit `/docs` when the application is running.
 
 ## 🏛️ Architecture
 
-This project follows a **hybrid approach** combining:
+This project follows a **Clean Architecture** approach with **Domain Driven Design** principles:
 
-- **Domain Driven Design** principles
-- **FastAPI best practices**
-- **Clean Architecture** patterns
-- **Database migrations** with Alembic
-- **AI integration** with multiple providers
+### Core Principles
 
-### Layers:
-1. **Handler Layer** - API endpoints and HTTP handling
-2. **Service Layer** - Business logic and use cases
-3. **Repository Layer** - Data access and persistence
-4. **Model Layer** - Domain entities and DTOs
-5. **Database Layer** - SQLAlchemy models and migrations
+- **Separation of Concerns**: Clear boundaries between layers
+- **Dependency Inversion**: High-level modules don't depend on low-level modules
+- **Single Responsibility**: Each module has one clear purpose
+- **Repository Pattern**: Abstraction of data access logic
+- **Service Layer**: Encapsulates business logic
+
+### Architecture Layers
+
+```
+┌─────────────────────────────────────────┐
+│         API Layer (Handlers)            │  ← HTTP endpoints, request/response
+├─────────────────────────────────────────┤
+│         Business Logic (Services)       │  ← Core business rules
+├─────────────────────────────────────────┤
+│         Data Access (Repositories)      │  ← Database operations
+├─────────────────────────────────────────┤
+│         Database Models (SQLAlchemy)    │  ← ORM models
+└─────────────────────────────────────────┘
+```
+
+### Layer Responsibilities
+
+1. **Handler Layer** (`internal/*/handler/`)
+   - HTTP request/response handling
+   - Input validation
+   - Authentication & authorization
+   - Route definitions
+
+2. **Service Layer** (`internal/*/service/`)
+   - Business logic orchestration
+   - Transaction management
+   - Cross-cutting concerns
+   - Domain operations
+
+3. **Repository Layer** (`internal/*/repository/`)
+   - Data persistence
+   - Query construction
+   - Database abstraction
+   - CRUD operations
+
+4. **Model Layer** (`internal/*/model/`)
+   - Data Transfer Objects (DTOs)
+   - Domain entities
+   - Validation schemas
+   - Request/response models
+
+5. **Database Layer** (`app/database/`)
+   - SQLAlchemy ORM models
+   - Database configuration
+   - Connection management
+   - Migration scripts (Alembic)
+
+### Features Integration
+
+- **JWT Authentication**: Token-based auth with middleware
+- **OAuth Integration**: GitHub and Google OAuth flows
+- **AI Integration**: External AI API for course/guide generation
+- **CORS**: Configured for frontend communication
+- **Database Migrations**: Alembic for schema management
 
 ## 🛠️ Development
 
-### Code Quality
+### Running in Development Mode
+
 ```bash
-# Format code
-black .
+# Start with hot-reload
+python run.py
 
-# Sort imports
-isort .
-
-# Lint code
-flake8 .
-
-# Type checking
-mypy .
+# Or with uvicorn
+uvicorn app.main:app --reload --host 0.0.0.0 --port 9000
 ```
 
 ### Database Development
-```bash
-# Create new migration
-alembic revision --autogenerate -m "Add new feature"
 
-# Apply migrations
+```bash
+# Create new migration from model changes
+alembic revision --autogenerate -m "Description of changes"
+
+# Apply all pending migrations
 alembic upgrade head
 
-# Rollback if needed
+# Rollback last migration
 alembic downgrade -1
+
+# Rollback to specific revision
+alembic downgrade <revision_id>
+
+# Show current database revision
+alembic current
+
+# Show migration history
+alembic history
 ```
 
 ### Adding New Features
-1. Add domain models in `internal/domain/model/` or `internal/ai/model/`
-2. Add database models in `app/database/models.py`
-3. Create migration: `alembic revision --autogenerate -m "Description"`
-4. Add business logic in `internal/*/service/`
-5. Add data access in `internal/*/repository/`
-6. Add API endpoints in `internal/*/handler/`
-7. Add tests in `tests/`
+
+1. **Create Database Models**: Add SQLAlchemy models in `app/database/models.py`
+2. **Generate Migration**: Run `alembic revision --autogenerate -m "Description"`
+3. **Create DTOs**: Add request/response models in `internal/{domain}/model/`
+4. **Implement Repository**: Add data access logic in `internal/{domain}/repository/`
+5. **Implement Service**: Add business logic in `internal/{domain}/service/`
+6. **Create Handlers**: Add API endpoints in `internal/{domain}/handler/`
+7. **Register Routes**: Import and include router in `app/main.py`
+8. **Add Tests**: Create tests in `tests/` directory
+
+### Testing
+
+```bash
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=app --cov=internal --cov-report=html
+
+# Run specific test file
+pytest tests/test_items.py
+
+# Run with verbose output
+pytest -v
+```
+
+### Code Quality
+
+Recommended tools (not included in requirements.txt):
+
+```bash
+# Format code with black
+pip install black
+black .
+
+# Sort imports with isort
+pip install isort
+isort .
+
+# Lint with flake8
+pip install flake8
+flake8 .
+
+# Type checking with mypy
+pip install mypy
+mypy .
+```
+
+### Docker Development
+
+```bash
+# Build image
+docker build -t tara-backend .
+
+# Run container
+docker run -p 9000:9000 \
+  --env-file .env \
+  -v $(pwd):/app \
+  tara-backend
+
+# Run with database mounted
+docker run -p 9000:9000 \
+  --env-file .env \
+  --link postgres:db \
+  tara-backend
+```
+
+### Hot Reload in Docker
+
+For development with hot reload in Docker, modify `run.py` to use uvicorn's reload feature and mount your code as a volume.
+
+## 📚 Tech Stack
+
+- **Framework**: FastAPI 0.104+
+- **Database**: PostgreSQL with SQLAlchemy
+- **Migrations**: Alembic
+- **Authentication**: JWT with OAuth (GitHub, Google)
+- **HTTP Client**: httpx
+- **Validation**: Pydantic
+- **Testing**: pytest
+- **Container**: Docker
+
+## 🐛 Troubleshooting
+
+### Database Connection Issues
+
+```bash
+# Check if database is running
+psql -U postgres -c "SELECT 1"
+
+# Test connection from Python
+python -c "from app.database.connection import engine; engine.connect()"
+```
+
+### Migration Issues
+
+```bash
+# If migrations fail, check current state
+alembic current
+
+# View migration history
+alembic history
+
+# Create backup before migration
+pg_dump -U postgres tara > backup.sql
+
+# Fix migration conflicts
+# Edit the conflicting migration file in alembic/versions/
+```
+
+### Port Already in Use
+
+```bash
+# Find process using port 9000
+lsof -i :9000
+
+# Kill the process
+kill -9 <PID>
+
+# Or use a different port
+uvicorn app.main:app --port 9001
+```
+
+### Environment Variables Not Loading
+
+```bash
+# Verify .env file exists
+ls -la .env
+
+# Check if variables are loaded
+python -c "from app.config import settings; print(settings.DATABASE_URL)"
+```
+
+### Import Errors
+
+```bash
+# Make sure you're in the correct directory
+cd tara-be
+
+# Reinstall dependencies
+pip install -r requirements.txt --force-reinstall
+
+# Check Python path
+python -c "import sys; print(sys.path)"
+```
+
+## 🚀 Deployment
+
+### Production Deployment
+
+1. **Set Environment Variables**: Configure all required environment variables
+2. **Run Migrations**: `alembic upgrade head`
+3. **Start Application**: `uvicorn app.main:app --host 0.0.0.0 --port 9000`
+
+### Docker Production
+
+```bash
+# Build optimized image
+docker build -t tara-backend:latest .
+
+# Run with production settings
+docker run -d \
+  --name tara-backend \
+  -p 9000:9000 \
+  --env-file .env.production \
+  --restart unless-stopped \
+  tara-backend:latest
+```
+
+### Cloud Deployment (Google Cloud Run)
+
+The project is configured for Google Cloud Run deployment. See `.github/workflows/` for CI/CD configuration.
+
+```bash
+# Deploy to Cloud Run
+gcloud run deploy tara-backend \
+  --source . \
+  --region us-central1 \
+  --port 9000 \
+  --env-vars-file env_vars.yaml
+```
+
+## 📝 License
+
+This project is proprietary software. All rights reserved.
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📧 Contact
+
+For questions or support, please contact the development team.
